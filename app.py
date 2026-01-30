@@ -6,21 +6,6 @@ from pathlib import Path
 import base64
 
 # ==========================================================
-# Rental Affordability Checker (UI Focus)
-# ----------------------------------------------------------
-# - 2 tabs only: Checker | By Negeri
-# - 3 states only: Selangor, Putrajaya, Kuala Lumpur
-# - No calculation table, no CSV download, no "Rules used"
-# - Results labels are general (no formulas shown)
-# - Checker tab uses Greater Klang Valley coefficients (MAINTAIN)
-# - By Negeri uses state-specific coefficients (UPDATED from your table)
-# - UX:
-#   (1) Full width page (remove max-width constraint)
-#   (2) Dark mode dropdown list uses WHITE bg + BLACK font (readable)
-#   (3) Bilingual labels: English (big) + Malay (small)
-#   (4) Each variable has a "?" help indicator (EN + BM)
-#   (5) ✅ Hide the internal widget variable names (ethnicityS, depositS, etc.)
-# ==========================================================
 
 APP_DIR = Path(__file__).resolve().parent
 
@@ -348,7 +333,7 @@ COEF_GKV = {
     "Constant": 0.310,
 }
 
-# --- (B) By Negeri tab: UPDATED from your table (exact labels as given) ---
+# --- (B) By Negeri : UPDATED from your le (exact labels as given) ---
 COEF_SELANGOR_STATE = {
     "@3.Umur": 0.018,
     "woman(1)": 0.196,
@@ -473,7 +458,7 @@ COEF_BY_STATE = {
     "Kuala Lumpur": COEF_KUALALUMPUR_STATE,
 }
 
-COEF_DEFAULT = COEF_GKV  # Checker tab default (Greater Klang Valley)
+COEF_DEFAULT = COEF_GKV  # Checker  default (Greater Klang Valley)
 
 
 # ==========================================================
@@ -652,7 +637,7 @@ def build_inputs(
     if "isi_rumah_lebih_5(1)" in inp:
         inp["isi_rumah_lebih_5(1)"] = is_hh_5p
 
-    # Dependents (varies by state tables)
+    # Dependents (varies by state les)
     is_dep_less2 = 1.0 if dependents == "Kurang dari 2 orang" else 0.0
     is_dep_3_4 = 1.0 if dependents == "3 - 4 orang" else 0.0
     is_dep_5p = 1.0 if dependents == "Lebih 5 orang" else 0.0
@@ -663,7 +648,7 @@ def build_inputs(
     if "Bilangan tanggungan=5+ orang(1)" in inp:
         inp["Bilangan tanggungan=5+ orang(1)"] = is_dep_5p
 
-    # State-table style
+    # State-le style
     if "tanggungan_kurang_2(1)" in inp:
         inp["tanggungan_kurang_2(1)"] = is_dep_less2
     if "tanggungan_3_4(1)" in inp:
@@ -739,7 +724,7 @@ def build_inputs(
     if "sewa_lebih_6(1)" in inp:
         inp["sewa_lebih_6(1)"] = is_6p
 
-    # Skim (note: state tables use skim_tidak(1) = 1 if "Tidak")
+    # Skim (note: state les use skim_tidak(1) = 1 if "Tidak")
     if "Adakah anda mengetahui terdapat skim mampu sewa di Malaysia? (contoh: SMART sewa)(1)" in inp:
         inp["Adakah anda mengetahui terdapat skim mampu sewa di Malaysia? (contoh: SMART sewa)(1)"] = (
             1.0 if skim == "Ya" else 0.0
@@ -979,7 +964,7 @@ st.markdown(
 # ==========================================================
 # ✅ 2 TABS ONLY
 # ==========================================================
-tab_checker, tab_negeri = st.tabs(["✅ Checker", "🗺️ By Negeri"])
+tab_checker, tab_negeri = st.tabs(["✅ Checker By Greater Klang Valley", "🗺️ By State"])
 
 
 # ==========================================================
@@ -1566,7 +1551,7 @@ with tab_negeri:
                 help=help_text("Max rent share of income.", "Had maksimum sewa berbanding pendapatan."),
             )
 
-        runS = st.button("✅ Run By Negeri", use_container_width=True, key="runS")
+        runS = st.button("✅ Run By State", use_container_width=True, key="runS")
 
     if "result_state" not in st.session_state:
         st.session_state["result_state"] = None
