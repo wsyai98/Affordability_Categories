@@ -7,10 +7,11 @@ import base64
 
 # ==========================================================
 # Rental Affordability Checker (English UI) - UI Focus
-# - Generalized Results labels (no formulas shown)
-# - Tabs: Checker | Variables & Categories | By Negeri
-# - OPTIONS standardized to match "List of Variables & Categories"
-# - Per-state coefficient structure (COEF_BY_STATE)
+# - 2 tabs only: Checker | By Negeri
+# - 3 states only: Selangor, Putrajaya, Kuala Lumpur
+# - No calculation table, no CSV download, no "Rules used"
+# - Results labels are general (no formulas)
+# - By Negeri uses state-specific coefficients
 # ==========================================================
 
 APP_DIR = Path(__file__).resolve().parent
@@ -19,133 +20,7 @@ APP_DIR = Path(__file__).resolve().parent
 P_THRESHOLD = 0.05  # pass if p >= 0.05
 
 
-# -------------------- BASE COEFFICIENTS --------------------
-COEF_BASE = {
-    "Umur": 0.002,
-    "Jantina ketua keluarga(1)": 0.007,
-    "Warganegara(1)": -0.818,
-    "Bangsa=Cina(1)": -0.411,
-    "Bangsa=India(1)": 0.463,
-    "Bangsa=Lain-lain(1)": 0.849,
-    "Agama=Buddha(1)": 0.131,
-    "Agama=Hindu(1)": -0.525,
-    "Agama=Lain-lain(1)": -0.158,
-    "Status Perkahwinan=Berkahwin(1)": -0.007,
-    "Status Perkahwinan=Cerai/BaluDuda/Pisah(1)": 0.313,
-    "Tahap Pendidikan=Undergraduate(1)": -0.537,
-    "Tahap Pendidikan=Postgraduate(1)": -0.808,
-    "Pekerjaan=Bekerja sendiri(1)": 0.198,
-    "Pekerjaan=Lain-lain(1)": -0.801,
-    "Pekerjaan=Pekerja Kerajaan(1)": 0.803,
-    "Pekerjaan=Pekerja Swasta(1)": 0.912,
-    "Pekerjaan=Pesara(1)": 0.018,
-    "Bilangan isi rumah=3-4 orang(1)": 0.096,
-    "Bilangan isi rumah=5+ orang(1)": -0.403,
-    "Bilangan tanggungan=3-4 orang(1)": -0.028,
-    "Bilangan tanggungan=5+ orang(1)": -0.134,
-    "Jenis Penyewaan=Bilik(1)": 1.121,
-    "Jenis rumah sewa=Kondominium(1)": -1.007,
-    "Jenis rumah sewa=Lain-lain(1)": -0.598,
-    "Jenis rumah sewa=Pangsapuri(1)": -0.604,
-    "Jenis rumah sewa=Rumah 1 unit(1)": -0.711,
-    "Jenis rumah sewa=Rumah Teres(1)": 0.526,
-    "Jenis kelengkapan perabot=Berperabot penuh(1)": -0.053,
-    "Jenis kelengkapan perabot=Berperabot separa(1)": -0.370,
-    "deposit_1_1(1)": 0.339,
-    "deposit_2_1(1)": 0.556,
-    "deposit_3_1(1)": 0.686,
-    "Berapa lama anda telah menyewa rumah=3-5 tahun(1)": 0.413,
-    "Berapa lama anda telah menyewa rumah=6+ tahun(1)": -0.584,
-    "Adakah anda mengetahui terdapat skim mampu sewa di Malaysia? (contoh: SMART sewa)(1)": 0.200,
-    "Constant": 0.310,
-}
-
-# -------------------- PER-STATE COEF STRUCTURE --------------------
-# NOTE:
-# - If you don't have actual negeri coefficients yet, keep it like this:
-#   We only adjust Constant per state (safe + simple).
-# - Later, you can overwrite ANY coef key per state.
-STATE_CONSTANT_ADJUST = {
-    # contoh placeholder (kau boleh buang/ubah)
-    "Selangor": 0.00,
-    "Putrajaya": 0.02,
-    "Kuala Lumpur": 0.01,
-    "Johor": -0.01,
-    "Penang": 0.01,
-}
-
-COEF_BY_STATE = {}
-for negeri, adj in STATE_CONSTANT_ADJUST.items():
-    c = dict(COEF_BASE)
-    c["Constant"] = COEF_BASE["Constant"] + float(adj)
-    COEF_BY_STATE[negeri] = c
-
-# default fallback
-def get_coef_for_state(state: str) -> dict:
-    return COEF_BY_STATE.get(state, COEF_BASE)
-
-
-# -------------------- STANDARDIZED OPTIONS (MATCH YOUR LIST) --------------------
-OPTIONS = {
-    "Gender": ["Lelaki", "Perempuan"],
-    "Nationality": ["Malaysian", "Non-Malaysian"],
-    "Ethnicity": ["Bumiputera", "Cina", "India", "Lain-lain"],
-    "Religion": ["Islam", "Buddha", "Hindu", "Lain-lain"],
-    "Marital Status": ["Single", "Bercerai", "Berkahwin"],  # as per list
-    "Education Level": ["SPM dan ke bawah", "Undergraduate", "Postgraduate"],  # 3 only
-    "Occupation": [
-        "Tidak bekerja",
-        "Bekerja sendiri",
-        "Lain-lain",
-        "Pekerja Kerajaan",
-        "Pekerja Swasta",
-        "Pesara",
-    ],
-    "Household Size": ["Kurang dari 2 orang", "3 - 4 orang", "Lebih 5 orang"],
-    "Number of Dependents": ["Kurang dari 2 orang", "3 - 4 orang", "Lebih 5 orang"],
-    "Jenis Penyewaan": ["Rumah", "Bilik"],
-    "Jenis Rumah Sewa": ["Flat", "Condominium", "Lain-lain", "Pangsapuri", "Rumah 1 unit", "Rumah Teres", "Rumah"],
-    "Furnished Type": ["Tiada perabot", "Perabot penuh", "Perabot separa"],
-    "Deposit": ["Tiada deposit", "1 + 1", "2 + 1", "3 + 1"],
-    "Tempoh Menyewa": ["Kurang dari 2 tahun", "3 - 5 tahun", "Lebih 6 tahun"],
-    "Skim": ["Ya", "Tidak"],
-}
-
-# -------------------- NEGERI + CONTOH LOKASI (UNTUK MAP & UI) --------------------
-STATE_PLACES = {
-    "Selangor": [
-        ("Shah Alam", 3.0738, 101.5183),
-        ("Petaling Jaya", 3.1073, 101.6067),
-        ("Kajang", 2.9936, 101.7873),
-    ],
-    "Putrajaya": [
-        ("Putrajaya", 2.9264, 101.6964),
-    ],
-    "Kuala Lumpur": [
-        ("Kuala Lumpur", 3.1390, 101.6869),
-    ],
-    "Johor": [
-        ("Johor Bahru", 1.4927, 103.7414),
-    ],
-    "Penang": [
-        ("George Town", 5.4141, 100.3288),
-    ],
-}
-
-
-# -------------------- HELPERS --------------------
-def logistic(z: float) -> float:
-    if z >= 0:
-        ez = math.exp(-z)
-        return 1.0 / (1.0 + ez)
-    ez = math.exp(z)
-    return ez / (1.0 + ez)
-
-
-def clamp(x: float, lo: float, hi: float) -> float:
-    return max(lo, min(hi, x))
-
-
+# -------------------- LOGO HELPERS --------------------
 def img_to_base64(path: Path) -> str:
     data = path.read_bytes()
     return base64.b64encode(data).decode("utf-8")
@@ -170,6 +45,19 @@ def logo_strip_html(paths, height_px=42, gap_px=10):
       </div>
     </div>
     """
+
+
+# -------------------- MODEL MATH --------------------
+def logistic(z: float) -> float:
+    if z >= 0:
+        ez = math.exp(-z)
+        return 1.0 / (1.0 + ez)
+    ez = math.exp(z)
+    return ez / (1.0 + ez)
+
+
+def clamp(x: float, lo: float, hi: float) -> float:
+    return max(lo, min(hi, x))
 
 
 def _arc_path(cx, cy, r, a0_deg, a1_deg):
@@ -207,12 +95,14 @@ def svg_gauge_html(
         (0.40, 1.00, "rgba(34,197,94,0.85)"),
     ]
 
+    # threshold tick
     td = p_to_deg(t)
     tx1 = cx + (r - 2) * math.cos(math.radians(td))
     ty1 = cy + (r - 2) * math.sin(math.radians(td))
     tx2 = cx + (r - 24) * math.cos(math.radians(td))
     ty2 = cy + (r - 24) * math.sin(math.radians(td))
 
+    # needle
     nd = p_to_deg(v)
     nx = cx + (r - 10) * math.cos(math.radians(nd))
     ny = cy + (r - 10) * math.sin(math.radians(nd))
@@ -231,7 +121,8 @@ def svg_gauge_html(
 <meta charset="utf-8" />
 <style>
   html, body {{
-    margin: 0; padding: 0;
+    margin: 0;
+    padding: 0;
     background: transparent;
     color: {text_color};
     font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
@@ -293,6 +184,119 @@ def svg_gauge_html(
 """
 
 
+# ==========================================================
+# ✅ OPTIONS (STANDARDIZED)
+# ==========================================================
+OPTIONS = {
+    "Gender": ["Lelaki", "Perempuan"],
+    "Nationality": ["Malaysian", "Non-Malaysian"],
+    "Ethnicity": ["Bumiputera", "Cina", "India", "Lain-lain"],
+    "Religion": ["Islam", "Buddha", "Hindu", "Lain-lain"],
+    "Marital Status": ["Single", "Bercerai", "Berkahwin"],
+    "Education Level": ["SPM dan ke bawah", "Undergraduate", "Postgraduate"],
+    "Occupation": [
+        "Tidak bekerja",
+        "Bekerja sendiri",
+        "Lain-lain",
+        "Pekerja Kerajaan",
+        "Pekerja Swasta",
+        "Pesara",
+    ],
+    "Household Size": ["Kurang dari 2 orang", "3 - 4 orang", "Lebih 5 orang"],
+    "Number of Dependents": ["Kurang dari 2 orang", "3 - 4 orang", "Lebih 5 orang"],
+    "Jenis Penyewaan": ["Rumah", "Bilik"],
+    "Jenis Rumah Sewa": ["Flat", "Condominium", "Lain-lain", "Pangsapuri", "Rumah 1 unit", "Rumah Teres", "Rumah"],
+    "Furnished Type": ["Tiada perabot", "Perabot penuh", "Perabot separa"],
+    "Deposit": ["Tiada deposit", "1 + 1", "2 + 1", "3 + 1"],
+    "Tempoh Menyewa": ["Kurang dari 2 tahun", "3 - 5 tahun", "Lebih 6 tahun"],
+    "Skim": ["Ya", "Tidak"],
+}
+
+
+# ==========================================================
+# ✅ COEFFICIENTS (STATE-SPECIFIC)
+# ==========================================================
+# IMPORTANT:
+# - Letak coefficient set penuh untuk setiap negeri dekat sini.
+# - Aku letak contoh "berbeza" (placeholder). Kau boleh replace terus.
+COEF_SELANGOR = {
+    "Umur": 0.002,
+    "Jantina ketua keluarga(1)": 0.007,
+    "Warganegara(1)": -0.818,
+    "Bangsa=Cina(1)": -0.411,
+    "Bangsa=India(1)": 0.463,
+    "Bangsa=Lain-lain(1)": 0.849,
+    "Agama=Buddha(1)": 0.131,
+    "Agama=Hindu(1)": -0.525,
+    "Agama=Lain-lain(1)": -0.158,
+    "Status Perkahwinan=Berkahwin(1)": -0.007,
+    "Status Perkahwinan=Cerai/BaluDuda/Pisah(1)": 0.313,
+    "Tahap Pendidikan=Undergraduate(1)": -0.537,
+    "Tahap Pendidikan=Postgraduate(1)": -0.808,
+    "Pekerjaan=Bekerja sendiri(1)": 0.198,
+    "Pekerjaan=Lain-lain(1)": -0.801,
+    "Pekerjaan=Pekerja Kerajaan(1)": 0.803,
+    "Pekerjaan=Pekerja Swasta(1)": 0.912,
+    "Pekerjaan=Pesara(1)": 0.018,
+    "Bilangan isi rumah=3-4 orang(1)": 0.096,
+    "Bilangan isi rumah=5+ orang(1)": -0.403,
+    "Bilangan tanggungan=3-4 orang(1)": -0.028,
+    "Bilangan tanggungan=5+ orang(1)": -0.134,
+    "Jenis Penyewaan=Bilik(1)": 1.121,
+    "Jenis rumah sewa=Kondominium(1)": -1.007,
+    "Jenis rumah sewa=Lain-lain(1)": -0.598,
+    "Jenis rumah sewa=Pangsapuri(1)": -0.604,
+    "Jenis rumah sewa=Rumah 1 unit(1)": -0.711,
+    "Jenis rumah sewa=Rumah Teres(1)": 0.526,
+    "Jenis kelengkapan perabot=Berperabot penuh(1)": -0.053,
+    "Jenis kelengkapan perabot=Berperabot separa(1)": -0.370,
+    "deposit_1_1(1)": 0.339,
+    "deposit_2_1(1)": 0.556,
+    "deposit_3_1(1)": 0.686,
+    "Berapa lama anda telah menyewa rumah=3-5 tahun(1)": 0.413,
+    "Berapa lama anda telah menyewa rumah=6+ tahun(1)": -0.584,
+    "Adakah anda mengetahui terdapat skim mampu sewa di Malaysia? (contoh: SMART sewa)(1)": 0.200,
+    "Constant": 0.310,
+}
+
+# Placeholder example: Putrajaya (replace with real full set)
+COEF_PUTRAJAYA = dict(COEF_SELANGOR)
+COEF_PUTRAJAYA.update({
+    "Constant": 0.340,
+    "Pekerjaan=Pekerja Swasta(1)": 0.880,
+    "Jenis Penyewaan=Bilik(1)": 1.050,
+})
+
+# Placeholder example: Kuala Lumpur (replace with real full set)
+COEF_KUALALUMPUR = dict(COEF_SELANGOR)
+COEF_KUALALUMPUR.update({
+    "Constant": 0.325,
+    "Jenis rumah sewa=Kondominium(1)": -0.950,
+    "Pekerjaan=Pekerja Swasta(1)": 0.940,
+})
+
+COEF_BY_STATE = {
+    "Selangor": COEF_SELANGOR,
+    "Putrajaya": COEF_PUTRAJAYA,
+    "Kuala Lumpur": COEF_KUALALUMPUR,
+}
+
+COEF_DEFAULT = COEF_SELANGOR  # Checker tab default
+
+
+# ==========================================================
+# ✅ MAP CENTER POINTS (STATE HIGHLIGHT)
+# ==========================================================
+STATE_CENTER = {
+    "Selangor": (3.0738, 101.5183),      # Shah Alam area
+    "Putrajaya": (2.9264, 101.6964),
+    "Kuala Lumpur": (3.1390, 101.6869),
+}
+
+
+# ==========================================================
+# INPUT MAPPING -> MODEL DUMMIES
+# ==========================================================
 def build_inputs(
     coef: dict,
     age: int,
@@ -350,7 +354,7 @@ def build_inputs(
     elif edu == "Postgraduate":
         inp["Tahap Pendidikan=Postgraduate(1)"] = 1.0
 
-    # Occupation base = Tidak bekerja (no dummy)
+    # Occupation base = Tidak bekerja
     if job == "Bekerja sendiri":
         inp["Pekerjaan=Bekerja sendiri(1)"] = 1.0
     elif job == "Lain-lain":
@@ -378,7 +382,7 @@ def build_inputs(
     if jenis_penyewaan == "Bilik":
         inp["Jenis Penyewaan=Bilik(1)"] = 1.0
 
-    # Jenis Rumah Sewa base = Rumah (no dummy)
+    # Jenis Rumah Sewa base = Rumah
     if jenis_rumah == "Condominium":
         inp["Jenis rumah sewa=Kondominium(1)"] = 1.0
     elif jenis_rumah == "Pangsapuri":
@@ -389,7 +393,7 @@ def build_inputs(
         inp["Jenis rumah sewa=Rumah 1 unit(1)"] = 1.0
     elif jenis_rumah == "Lain-lain":
         inp["Jenis rumah sewa=Lain-lain(1)"] = 1.0
-    # Flat treated as base too (no dummy in your coef list)
+    # Flat treated as base here (no dummy)
 
     # Furnished base = Tiada perabot
     if furnished == "Perabot penuh":
@@ -411,7 +415,7 @@ def build_inputs(
     elif tempoh == "Lebih 6 tahun":
         inp["Berapa lama anda telah menyewa rumah=6+ tahun(1)"] = 1.0
 
-    # Skim base = Tidak (ikut coef: (1) = Ya)
+    # Skim base = Tidak, (1)=Ya
     inp["Adakah anda mengetahui terdapat skim mampu sewa di Malaysia? (contoh: SMART sewa)(1)"] = (
         1.0 if skim == "Ya" else 0.0
     )
@@ -420,7 +424,6 @@ def build_inputs(
 
 
 def compute_zp(coef: dict, inputs: dict):
-    # internal only (no table shown)
     z = 0.0
     for k, b in coef.items():
         x = float(inputs.get(k, 0.0))
@@ -428,6 +431,16 @@ def compute_zp(coef: dict, inputs: dict):
     p = float(logistic(z))
     return float(z), float(p)
 
+
+def chip(label: str, ok: bool, border_color: str) -> str:
+    cls = "ok" if ok else "no"
+    return f'<span class="chip {cls}" style="border:1px solid {border_color};">{label}</span>'
+
+
+# ==========================================================
+# STREAMLIT CONFIG
+# ==========================================================
+st.set_page_config(page_title="Rental Affordability Checker", layout="wide")
 
 # ======================== TOP BAR ========================
 logo_paths = [
@@ -481,7 +494,10 @@ st.markdown(
     background: {PAGE_BG} !important;
     color: {TXT} !important;
   }}
-  .block-container {{ padding-top: .75rem; }}
+
+  /* ✅ keep size feel (avoid compact look) */
+  html, body {{ font-size: 16px !important; }}
+  .block-container {{ padding-top: .75rem; max-width: 1200px; }}
 
   .purple-card {{
     background: {CARD_BG};
@@ -514,6 +530,7 @@ st.markdown(
     -webkit-text-fill-color: {INPUT_TEXT} !important;
   }}
 
+  /* dropdown list readable */
   div[role="dialog"] {{
     background: {MENU_BG} !important;
   }}
@@ -537,35 +554,12 @@ st.markdown(
     -webkit-text-fill-color: {MENU_TEXT} !important;
     opacity: 1 !important;
   }}
-  div[role="dialog"] li[role="option"],
-  li[role="option"] {{
-    background: transparent !important;
-    color: {MENU_TEXT} !important;
-    -webkit-text-fill-color: {MENU_TEXT} !important;
-    opacity: 1 !important;
-  }}
   div[role="dialog"] li[role="option"]:hover,
   li[role="option"]:hover {{
     background: {MENU_HOVER} !important;
   }}
-  div[role="dialog"] [aria-selected="true"],
-  [aria-selected="true"] {{
-    background: {MENU_HOVER} !important;
-  }}
 
-  div[role="tooltip"] {{
-    background: {MENU_BG} !important;
-    color: {MENU_TEXT} !important;
-    border: 1px solid {INPUT_BORDER} !important;
-    border-radius: 10px !important;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.25) !important;
-  }}
-  div[role="tooltip"] * {{
-    color: {MENU_TEXT} !important;
-    -webkit-text-fill-color: {MENU_TEXT} !important;
-    opacity: 1 !important;
-  }}
-
+  /* Buttons */
   div.stButton > button {{
     color: #ffffff !important;
     background: rgba(17, 24, 39, 0.92) !important;
@@ -578,6 +572,7 @@ st.markdown(
     -webkit-text-fill-color: #ffffff !important;
   }}
 
+  /* Chips */
   .chip {{
     display:inline-flex;
     align-items:center;
@@ -585,18 +580,22 @@ st.markdown(
     border-radius: 999px;
     font-weight: 700;
     font-size: 12px;
-    border: 1px solid {BORDER};
     background: rgba(255,255,255,0.10);
   }}
   .chip.ok {{
     background: rgba(34,197,94,0.18);
-    border-color: rgba(34,197,94,0.35);
   }}
   .chip.no {{
     background: rgba(239,68,68,0.16);
-    border-color: rgba(239,68,68,0.35);
   }}
 
+  /* Metrics size (so it doesn't look kecil) */
+  [data-testid="stMetricValue"] > div {{
+    font-size: 2rem !important;
+    line-height: 1.15 !important;
+  }}
+
+  /* Logo */
   .logo-wrap {{ display:flex; justify-content:flex-end; }}
   .logo-strip {{
     display:inline-flex;
@@ -616,16 +615,15 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-def chip(label: str, ok: bool) -> str:
-    return f'<span class="chip {"ok" if ok else "no"}">{label}</span>'
 
-
-# ======================== TABS ========================
-tab_checker, tab_vars, tab_negeri = st.tabs(["✅ Checker", "📌 Variables & Categories", "🗺️ By Negeri"])
+# ==========================================================
+# ✅ 2 TABS ONLY
+# ==========================================================
+tab_checker, tab_negeri = st.tabs(["✅ Checker", "🗺️ By Negeri"])
 
 
 # ==========================================================
-# TAB 1: CHECKER
+# TAB 1: CHECKER (DEFAULT COEF)
 # ==========================================================
 with tab_checker:
     left, right = st.columns([1, 1.35], gap="large")
@@ -668,11 +666,12 @@ with tab_checker:
         run = st.button("✅ Run Check", use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-    if "result" not in st.session_state:
-        st.session_state["result"] = None
+    if "result_checker" not in st.session_state:
+        st.session_state["result_checker"] = None
 
     if run:
-        coef = COEF_BASE  # tab checker default (no negeri adjustment)
+        coef = COEF_DEFAULT
+
         inputs = build_inputs(
             coef=coef,
             age=int(age),
@@ -694,7 +693,6 @@ with tab_checker:
         )
 
         z, p = compute_zp(coef, inputs)
-
         ok_a = p >= P_THRESHOLD
         threshold = ratio * income
         ok_b = rent <= threshold
@@ -703,7 +701,7 @@ with tab_checker:
         rent_share = (rent / income) if income > 0 else 0.0
         rent_share = clamp(rent_share, 0.0, 1.0)
 
-        st.session_state["result"] = {
+        st.session_state["result_checker"] = {
             "z": z,
             "p": p,
             "threshold": threshold,
@@ -716,7 +714,7 @@ with tab_checker:
             "ok_all": ok_all,
         }
 
-    res = st.session_state["result"]
+    res = st.session_state["result_checker"]
 
     with right:
         st.markdown('<div class="purple-card">', unsafe_allow_html=True)
@@ -725,13 +723,13 @@ with tab_checker:
         if res is None:
             st.info("Click **Run Check** to show results.")
         else:
-            # ✅ GENERAL labels (no formula in label)
+            # ✅ GENERAL labels
             st.markdown(
                 f"""
 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
-  <div><b>Condition A</b>: {chip("Afford" if res["ok_a"] else "Not Afford", res["ok_a"])}</div>
-  <div><b>Condition B</b>: {chip("Afford" if res["ok_b"] else "Not Afford", res["ok_b"])}</div>
-  <div><b>Overall</b>: {chip("Afford" if res["ok_all"] else "Not Afford", res["ok_all"])}</div>
+  <div><b>Condition A</b>: {chip("Afford" if res["ok_a"] else "Not Afford", res["ok_a"], BORDER)}</div>
+  <div><b>Condition B</b>: {chip("Afford" if res["ok_b"] else "Not Afford", res["ok_b"], BORDER)}</div>
+  <div><b>Overall</b>: {chip("Afford" if res["ok_all"] else "Not Afford", res["ok_all"], BORDER)}</div>
 </div>
 """,
                 unsafe_allow_html=True,
@@ -780,196 +778,165 @@ with tab_checker:
 
 
 # ==========================================================
-# TAB 2: VARIABLES & CATEGORIES (GENERAL TABLE)
-# ==========================================================
-with tab_vars:
-    st.markdown('<div class="purple-card">', unsafe_allow_html=True)
-    st.subheader("List of Variables & Categories")
-
-    var_rows = [
-        ("Jantina", "Lelaki / Perempuan"),
-        ("Warganegara", "Malaysian / Non-Malaysian"),
-        ("Bangsa", "Bumiputera / Cina / India / Lain-lain"),
-        ("Agama", "Islam / Buddha / Hindu / Lain-lain"),
-        ("Status Perkahwinan", "Single / Bercerai / Berkahwin"),
-        ("Tahap Pendidikan", "SPM dan ke bawah / Undergraduate / Postgraduate"),
-        ("Pekerjaan", "Tidak bekerja / Bekerja sendiri / Lain-lain / Pekerja Kerajaan / Pekerja Swasta / Pesara"),
-        ("Bilangan Isi Rumah", "Kurang dari 2 orang / 3 - 4 orang / Lebih 5 orang"),
-        ("Bilangan Tanggungan", "Kurang dari 2 orang / 3 - 4 orang / Lebih 5 orang"),
-        ("Jenis Penyewaan", "Rumah / Bilik"),
-        ("Jenis Rumah Sewa", "Flat / Condominium / Lain-lain / Pangsapuri / Rumah 1 unit / Rumah Teres / Rumah"),
-        ("Jenis Kelengkapan Perabot", "Tiada perabot / Perabot penuh / Perabot separa"),
-        ("Deposit", "Tiada deposit / 1 + 1 / 2 + 1 / 3 + 1"),
-        ("Tempoh Menyewa", "Kurang dari 2 tahun / 3 - 5 tahun / Lebih 6 tahun"),
-        ("Skim", "Ya / Tidak"),
-    ]
-    df_vars = pd.DataFrame(var_rows, columns=["Variable", "Categories"])
-    st.dataframe(df_vars, use_container_width=True, height=520)
-
-    st.caption("Nota: Ini paparan general untuk user (UI). Coefficient detail boleh kekal internal.")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-# ==========================================================
-# TAB 3: BY NEGERI (STATE + PLACE + MAP + STATE COEF)
+# TAB 2: BY NEGERI (STATE-SPECIFIC COEF + MAP HIGHLIGHT)
 # ==========================================================
 with tab_negeri:
     st.markdown('<div class="purple-card">', unsafe_allow_html=True)
     st.subheader("By Negeri")
 
-    negeri_list = sorted(list(STATE_PLACES.keys()))
-    negeri = st.selectbox("Pilih Negeri", negeri_list, index=0)
+    negeri = st.selectbox("Pilih Negeri", ["Selangor", "Putrajaya", "Kuala Lumpur"], index=0)
 
-    places = STATE_PLACES.get(negeri, [])
-    place_names = [p[0] for p in places] if places else ["(No place set)"]
-    place_choice = st.selectbox("Pilih Lokasi (contoh)", place_names, index=0)
-
-    chosen = next((p for p in places if p[0] == place_choice), None)
-    if chosen:
-        _, lat, lon = chosen
-        st.caption(f"Location preview: {place_choice}, {negeri}")
-        st.map(pd.DataFrame([{"lat": lat, "lon": lon}]), zoom=10)
+    # ✅ map highlight (point at state center)
+    lat, lon = STATE_CENTER[negeri]
+    st.caption(f"Location preview: {negeri}")
+    st.map(pd.DataFrame([{"lat": lat, "lon": lon}]), zoom=9)
 
     st.divider()
-    st.caption("Nota: Tab ini guna coefficient mengikut negeri (kalau ada). Buat masa ni contoh: adjust pada Constant.")
 
-    # Reuse same inputs (standardized)
-    col1, col2 = st.columns(2)
-    with col1:
-        age_s = st.number_input("Umur (tahun)", min_value=15, max_value=100, value=38, step=1, key="age_state")
-        gender_s = st.selectbox("Jantina", OPTIONS["Gender"], index=0, key="gender_state")
-        nationality_s = st.selectbox("Warganegara", OPTIONS["Nationality"], index=0, key="nat_state")
-        ethnicity_s = st.selectbox("Bangsa", OPTIONS["Ethnicity"], index=0, key="eth_state")
-        religion_s = st.selectbox("Agama", OPTIONS["Religion"], index=0, key="rel_state")
-        marital_s = st.selectbox("Status Perkahwinan", OPTIONS["Marital Status"], index=0, key="mar_state")
-        edu_s = st.selectbox("Tahap Pendidikan", OPTIONS["Education Level"], index=0, key="edu_state")
+    # same input UI (state tab)
+    leftS, rightS = st.columns([1, 1.35], gap="large")
 
-    with col2:
-        job_s = st.selectbox("Pekerjaan", OPTIONS["Occupation"], index=0, key="job_state")
-        household_s = st.selectbox("Bilangan Isi Rumah", OPTIONS["Household Size"], index=0, key="hh_state")
-        dependents_s = st.selectbox("Bilangan Tanggungan", OPTIONS["Number of Dependents"], index=0, key="dep_state")
-        jenis_penyewaan_s = st.selectbox("Jenis Penyewaan", OPTIONS["Jenis Penyewaan"], index=0, key="jp_state")
-        jenis_rumah_s = st.selectbox("Jenis Rumah Sewa", OPTIONS["Jenis Rumah Sewa"], index=0, key="jr_state")
-        furnished_s = st.selectbox("Jenis Kelengkapan Perabot", OPTIONS["Furnished Type"], index=0, key="fur_state")
-        deposit_s = st.selectbox("Deposit", OPTIONS["Deposit"], index=0, key="depst_state")
-        tempoh_s = st.selectbox("Tempoh Menyewa", OPTIONS["Tempoh Menyewa"], index=0, key="tmp_state")
-        skim_s = st.selectbox("Skim", OPTIONS["Skim"], index=1, key="skim_state")
+    with leftS:
+        st.subheader("User Inputs")
 
-    st.divider()
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        income_s = st.number_input("Monthly Income (RM)", min_value=0.0, value=6000.0, step=100.0, key="inc_state")
-    with c2:
-        rent_s = st.number_input("Monthly Rent (RM)", min_value=0.0, value=2000.0, step=50.0, key="rent_state")
-    with c3:
-        ratio_s = st.number_input("Rent ratio threshold", min_value=0.0, max_value=1.0, value=0.38, step=0.01, key="ratio_state")
+        colA, colB = st.columns(2)
+        with colA:
+            ageS = st.number_input("Umur (tahun)", min_value=15, max_value=100, value=38, step=1, key="ageS")
+            genderS = st.selectbox("Jantina", OPTIONS["Gender"], index=0, key="genderS")
+            nationalityS = st.selectbox("Warganegara", OPTIONS["Nationality"], index=0, key="nationalityS")
+            ethnicityS = st.selectbox("Bangsa", OPTIONS["Ethnicity"], index=0, key="ethnicityS")
+            religionS = st.selectbox("Agama", OPTIONS["Religion"], index=0, key="religionS")
+            maritalS = st.selectbox("Status Perkahwinan", OPTIONS["Marital Status"], index=0, key="maritalS")
+            eduS = st.selectbox("Tahap Pendidikan", OPTIONS["Education Level"], index=0, key="eduS")
 
-    run_state = st.button("✅ Run By Negeri", use_container_width=True, key="run_state_btn")
+        with colB:
+            jobS = st.selectbox("Pekerjaan", OPTIONS["Occupation"], index=0, key="jobS")
+            householdS = st.selectbox("Bilangan Isi Rumah", OPTIONS["Household Size"], index=0, key="householdS")
+            dependentsS = st.selectbox("Bilangan Tanggungan", OPTIONS["Number of Dependents"], index=0, key="dependentsS")
+            jenis_penyewaanS = st.selectbox("Jenis Penyewaan", OPTIONS["Jenis Penyewaan"], index=0, key="jenis_penyewaanS")
+            jenis_rumahS = st.selectbox("Jenis Rumah Sewa", OPTIONS["Jenis Rumah Sewa"], index=0, key="jenis_rumahS")
+            furnishedS = st.selectbox("Jenis Kelengkapan Perabot", OPTIONS["Furnished Type"], index=0, key="furnishedS")
+            depositS = st.selectbox("Deposit", OPTIONS["Deposit"], index=0, key="depositS")
+            tempohS = st.selectbox("Tempoh Menyewa", OPTIONS["Tempoh Menyewa"], index=0, key="tempohS")
+            skimS = st.selectbox("Skim", OPTIONS["Skim"], index=1, key="skimS")
+
+        st.divider()
+        st.subheader("Income & Rent Inputs")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            incomeS = st.number_input("Monthly Income (RM)", min_value=0.0, value=6000.0, step=100.0, key="incomeS")
+        with c2:
+            rentS = st.number_input("Monthly Rent (RM)", min_value=0.0, value=2000.0, step=50.0, key="rentS")
+        with c3:
+            ratioS = st.number_input("Rent ratio threshold", min_value=0.0, max_value=1.0, value=0.38, step=0.01, key="ratioS")
+
+        runS = st.button("✅ Run By Negeri", use_container_width=True, key="runS")
 
     if "result_state" not in st.session_state:
         st.session_state["result_state"] = None
 
-    if run_state:
-        coef_state = get_coef_for_state(negeri)
+    if runS:
+        coef_state = COEF_BY_STATE[negeri]
 
-        inputs_state = build_inputs(
+        inputsS = build_inputs(
             coef=coef_state,
-            age=int(age_s),
-            gender=gender_s,
-            nationality=nationality_s,
-            ethnicity=ethnicity_s,
-            religion=religion_s,
-            marital=marital_s,
-            edu=edu_s,
-            job=job_s,
-            household=household_s,
-            dependents=dependents_s,
-            jenis_penyewaan=jenis_penyewaan_s,
-            jenis_rumah=jenis_rumah_s,
-            furnished=furnished_s,
-            deposit=deposit_s,
-            tempoh=tempoh_s,
-            skim=skim_s,
+            age=int(ageS),
+            gender=genderS,
+            nationality=nationalityS,
+            ethnicity=ethnicityS,
+            religion=religionS,
+            marital=maritalS,
+            edu=eduS,
+            job=jobS,
+            household=householdS,
+            dependents=dependentsS,
+            jenis_penyewaan=jenis_penyewaanS,
+            jenis_rumah=jenis_rumahS,
+            furnished=furnishedS,
+            deposit=depositS,
+            tempoh=tempohS,
+            skim=skimS,
         )
-        z_s, p_s = compute_zp(coef_state, inputs_state)
 
-        ok_a_s = p_s >= P_THRESHOLD
-        threshold_s = ratio_s * income_s
-        ok_b_s = rent_s <= threshold_s
-        ok_all_s = ok_a_s and ok_b_s
+        zS, pS = compute_zp(coef_state, inputsS)
+        ok_aS = pS >= P_THRESHOLD
+        thresholdS = ratioS * incomeS
+        ok_bS = rentS <= thresholdS
+        ok_allS = ok_aS and ok_bS
 
-        rent_share_s = (rent_s / income_s) if income_s > 0 else 0.0
-        rent_share_s = clamp(rent_share_s, 0.0, 1.0)
+        rent_shareS = (rentS / incomeS) if incomeS > 0 else 0.0
+        rent_shareS = clamp(rent_shareS, 0.0, 1.0)
 
         st.session_state["result_state"] = {
             "negeri": negeri,
-            "z": z_s,
-            "p": p_s,
-            "threshold": threshold_s,
-            "ratio": ratio_s,
-            "income": income_s,
-            "rent": rent_s,
-            "rent_share": rent_share_s,
-            "ok_a": ok_a_s,
-            "ok_b": ok_b_s,
-            "ok_all": ok_all_s,
-            "const_used": coef_state.get("Constant", COEF_BASE["Constant"]),
+            "z": zS,
+            "p": pS,
+            "threshold": thresholdS,
+            "ratio": ratioS,
+            "income": incomeS,
+            "rent": rentS,
+            "rent_share": rent_shareS,
+            "ok_a": ok_aS,
+            "ok_b": ok_bS,
+            "ok_all": ok_allS,
         }
 
     resS = st.session_state["result_state"]
-    if resS:
-        st.divider()
-        st.subheader("Results (By Negeri)")
 
-        st.markdown(
-            f"""
+    with rightS:
+        st.subheader("Results")
+
+        if resS is None:
+            st.info("Pick a negeri, then click **Run By Negeri**.")
+        else:
+            st.markdown(
+                f"""
 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
   <div><b>Negeri</b>: <span style="opacity:.9;">{resS["negeri"]}</span></div>
-  <div><b>Condition A</b>: {chip("Afford" if resS["ok_a"] else "Not Afford", resS["ok_a"])}</div>
-  <div><b>Condition B</b>: {chip("Afford" if resS["ok_b"] else "Not Afford", resS["ok_b"])}</div>
-  <div><b>Overall</b>: {chip("Afford" if resS["ok_all"] else "Not Afford", resS["ok_all"])}</div>
+  <div><b>Condition A</b>: {chip("Afford" if resS["ok_a"] else "Not Afford", resS["ok_a"], BORDER)}</div>
+  <div><b>Condition B</b>: {chip("Afford" if resS["ok_b"] else "Not Afford", resS["ok_b"], BORDER)}</div>
+  <div><b>Overall</b>: {chip("Afford" if resS["ok_all"] else "Not Afford", resS["ok_all"], BORDER)}</div>
 </div>
 """,
-            unsafe_allow_html=True,
-        )
-
-        g1, g2 = st.columns(2)
-        with g1:
-            st.components.v1.html(
-                svg_gauge_html(
-                    title="Condition A Meter",
-                    value_0_1=float(resS["p"]),
-                    threshold_0_1=float(P_THRESHOLD),
-                    subtitle_left="Low",
-                    subtitle_right=f"Pass at {P_THRESHOLD:.2f}",
-                    text_color=("#f8fafc" if dark_mode else "#111827"),
-                    border_color=BORDER,
-                ),
-                height=310,
-                scrolling=False,
-            )
-        with g2:
-            ratio_v = float(resS["ratio"])
-            share = float(resS["rent_share"])
-            closeness = clamp(share / ratio_v, 0.0, 1.0) if ratio_v > 0 else 0.0
-            st.components.v1.html(
-                svg_gauge_html(
-                    title="Condition B Meter",
-                    value_0_1=float(closeness),
-                    threshold_0_1=1.0,
-                    subtitle_left=f"Rent/Income: {share:.2f}",
-                    subtitle_right=f"Threshold: {ratio_v:.2f}",
-                    text_color=("#f8fafc" if dark_mode else "#111827"),
-                    border_color=BORDER,
-                ),
-                height=310,
-                scrolling=False,
+                unsafe_allow_html=True,
             )
 
-        m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Score (z)", f"{resS['z']:.6f}")
-        m2.metric("Estimated probability (p)", f"{resS['p']:.9f}")
-        m3.metric("Rent threshold (RM)", f"{resS['threshold']:.2f}")
-        m4.metric("Constant used (negeri)", f"{resS['const_used']:.3f}")
+            g1, g2 = st.columns(2)
+            with g1:
+                st.components.v1.html(
+                    svg_gauge_html(
+                        title="Condition A Meter",
+                        value_0_1=float(resS["p"]),
+                        threshold_0_1=float(P_THRESHOLD),
+                        subtitle_left="Low",
+                        subtitle_right=f"Pass at {P_THRESHOLD:.2f}",
+                        text_color=("#f8fafc" if dark_mode else "#111827"),
+                        border_color=BORDER,
+                    ),
+                    height=310,
+                    scrolling=False,
+                )
+            with g2:
+                ratio_v = float(resS["ratio"])
+                share = float(resS["rent_share"])
+                closeness = clamp(share / ratio_v, 0.0, 1.0) if ratio_v > 0 else 0.0
+                st.components.v1.html(
+                    svg_gauge_html(
+                        title="Condition B Meter",
+                        value_0_1=float(closeness),
+                        threshold_0_1=1.0,
+                        subtitle_left=f"Rent/Income: {share:.2f}",
+                        subtitle_right=f"Threshold: {ratio_v:.2f}",
+                        text_color=("#f8fafc" if dark_mode else "#111827"),
+                        border_color=BORDER,
+                    ),
+                    height=310,
+                    scrolling=False,
+                )
+
+            m1, m2, m3 = st.columns(3)
+            m1.metric("Score (z)", f"{resS['z']:.6f}")
+            m2.metric("Estimated probability (p)", f"{resS['p']:.9f}")
+            m3.metric("Rent threshold (RM)", f"{resS['threshold']:.2f}")
 
     st.markdown("</div>", unsafe_allow_html=True)
