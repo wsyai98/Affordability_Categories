@@ -11,10 +11,13 @@ import base64
 # - 3 states only: Selangor, Putrajaya, Kuala Lumpur
 # - No calculation table, no CSV download, no "Rules used"
 # - Results labels are general (no formulas shown)
-# - By Negeri uses state-specific coefficients
-# - FIXED:
+# - Checker tab uses Greater Klang Valley coefficients (MAINTAIN)
+# - By Negeri uses state-specific coefficients (UPDATED from your table)
+# - UX:
 #   (1) Full width page (remove max-width constraint)
 #   (2) Dark mode dropdown list uses WHITE bg + BLACK font (readable)
+#   (3) Bilingual labels: English (big) + Malay (small)
+#   (4) Each variable has a "?" help indicator (EN + BM)
 # ==========================================================
 
 APP_DIR = Path(__file__).resolve().parent
@@ -98,14 +101,12 @@ def svg_gauge_html(
         (0.40, 1.00, "rgba(34,197,94,0.85)"),
     ]
 
-    # threshold tick
     td = p_to_deg(t)
     tx1 = cx + (r - 2) * math.cos(math.radians(td))
     ty1 = cy + (r - 2) * math.sin(math.radians(td))
     tx2 = cx + (r - 24) * math.cos(math.radians(td))
     ty2 = cy + (r - 24) * math.sin(math.radians(td))
 
-    # needle
     nd = p_to_deg(v)
     nx = cx + (r - 10) * math.cos(math.radians(nd))
     ny = cy + (r - 10) * math.sin(math.radians(nd))
@@ -188,7 +189,7 @@ def svg_gauge_html(
 
 
 # ==========================================================
-# ✅ OPTIONS (STANDARDIZED - ikut list variables)
+# ✅ OPTIONS (internal values stay as your original)
 # ==========================================================
 OPTIONS = {
     "Gender": ["Lelaki", "Perempuan"],
@@ -215,13 +216,97 @@ OPTIONS = {
     "Skim": ["Ya", "Tidak"],
 }
 
+# --- Display (bilingual) for dropdown options (English first) ---
+DISPLAY = {
+    "Gender": {
+        "Lelaki": "Male (Lelaki)",
+        "Perempuan": "Female (Perempuan)",
+    },
+    "Nationality": {
+        "Malaysian": "Malaysian (Warganegara Malaysia)",
+        "Non-Malaysian": "Non-Malaysian (Bukan warganegara)",
+    },
+    "Ethnicity": {
+        "Bumiputera": "Bumiputera (Bumiputera)",
+        "Cina": "Chinese (Cina)",
+        "India": "Indian (India)",
+        "Lain-lain": "Other (Lain-lain)",
+    },
+    "Religion": {
+        "Islam": "Islam (Islam)",
+        "Buddha": "Buddhism (Buddha)",
+        "Hindu": "Hinduism (Hindu)",
+        "Lain-lain": "Other (Lain-lain)",
+    },
+    "Marital Status": {
+        "Single": "Single (Bujang)",
+        "Bercerai": "Divorced (Bercerai)",
+        "Berkahwin": "Married (Berkahwin)",
+    },
+    "Education Level": {
+        "SPM dan ke bawah": "SPM & below (SPM dan ke bawah)",
+        "Undergraduate": "Undergraduate (Ijazah Sarjana Muda)",
+        "Postgraduate": "Postgraduate (Pascasiswazah)",
+    },
+    "Occupation": {
+        "Tidak bekerja": "Unemployed (Tidak bekerja)",
+        "Bekerja sendiri": "Self-employed (Bekerja sendiri)",
+        "Lain-lain": "Other (Lain-lain)",
+        "Pekerja Kerajaan": "Government employee (Pekerja Kerajaan)",
+        "Pekerja Swasta": "Private employee (Pekerja Swasta)",
+        "Pesara": "Retired (Pesara)",
+    },
+    "Household Size": {
+        "Kurang dari 2 orang": "1–2 people (Kurang dari 2 orang)",
+        "3 - 4 orang": "3–4 people (3–4 orang)",
+        "Lebih 5 orang": "5+ people (Lebih 5 orang)",
+    },
+    "Number of Dependents": {
+        "Kurang dari 2 orang": "Less than 2 (Kurang dari 2)",
+        "3 - 4 orang": "3–4 (3–4 orang)",
+        "Lebih 5 orang": "More than 5 (Lebih 5)",
+    },
+    "Jenis Penyewaan": {
+        "Rumah": "Whole house (Rumah)",
+        "Bilik": "Room (Bilik)",
+    },
+    "Jenis Rumah Sewa": {
+        "Flat": "Flat (Flat)",
+        "Condominium": "Condominium (Kondominium)",
+        "Pangsapuri": "Apartment (Pangsapuri)",
+        "Rumah Teres": "Terrace house (Rumah Teres)",
+        "Rumah 1 unit": "Detached / single unit (Rumah 1 unit)",
+        "Lain-lain": "Other (Lain-lain)",
+        "Rumah": "House (Rumah)",
+    },
+    "Furnished Type": {
+        "Tiada perabot": "Unfurnished (Tiada perabot)",
+        "Perabot penuh": "Fully furnished (Perabot penuh)",
+        "Perabot separa": "Partly furnished (Perabot separa)",
+    },
+    "Deposit": {
+        "Tiada deposit": "No deposit (Tiada deposit)",
+        "1 + 1": "1+1 deposit (1+1)",
+        "2 + 1": "2+1 deposit (2+1)",
+        "3 + 1": "3+1 deposit (3+1)",
+    },
+    "Tempoh Menyewa": {
+        "Kurang dari 2 tahun": "Less than 2 years (Kurang dari 2 tahun)",
+        "3 - 5 tahun": "3–5 years (3–5 tahun)",
+        "Lebih 6 tahun": "More than 6 years (Lebih 6 tahun)",
+    },
+    "Skim": {
+        "Ya": "Yes (Ya)",
+        "Tidak": "No (Tidak)",
+    },
+}
+
 
 # ==========================================================
-# ✅ COEFFICIENTS (STATE-SPECIFIC)
+# ✅ COEFFICIENTS
 # ==========================================================
-# IMPORTANT:
-# - Replace Putrajaya & KL with real full sets when you have them.
-COEF_SELANGOR = {
+# --- (A) Checker tab: GREATER KLANG VALLEY (MAINTAIN your current set) ---
+COEF_GKV = {
     "Umur": 0.002,
     "Jantina ketua keluarga(1)": 0.007,
     "Warganegara(1)": -0.818,
@@ -261,42 +346,167 @@ COEF_SELANGOR = {
     "Constant": 0.310,
 }
 
-# Placeholder differences (replace with REAL values later)
-COEF_PUTRAJAYA = dict(COEF_SELANGOR)
-COEF_PUTRAJAYA.update({
-    "Constant": 0.340,
-    "Pekerjaan=Pekerja Swasta(1)": 0.880,
-    "Jenis Penyewaan=Bilik(1)": 1.050,
-})
-
-COEF_KUALALUMPUR = dict(COEF_SELANGOR)
-COEF_KUALALUMPUR.update({
-    "Constant": 0.325,
-    "Jenis rumah sewa=Kondominium(1)": -0.950,
-    "Pekerjaan=Pekerja Swasta(1)": 0.940,
-})
-
-COEF_BY_STATE = {
-    "Selangor": COEF_SELANGOR,
-    "Putrajaya": COEF_PUTRAJAYA,
-    "Kuala Lumpur": COEF_KUALALUMPUR,
+# --- (B) By Negeri tab: UPDATED from your table (exact labels as given) ---
+COEF_SELANGOR_STATE = {
+    "@3.Umur": 0.018,
+    "woman(1)": 0.196,
+    "foreigner(1)": -19.896,
+    "cina(1)": -0.155,
+    "india(1)": 20.278,
+    "bangsa_lain(1)": 20.391,
+    "budhha(1)": -0.531,
+    "hindu(1)": -20.168,
+    "agama_lain(1)": -0.523,
+    "kahwin(1)": -0.148,
+    "bercerai(1)": -0.986,
+    "undergraduate(1)": 0.473,
+    "postgraduate(1)": -0.41,
+    "kerja_sendiri(1)": -0.385,
+    "kerja_lain(1)": -1.063,
+    "kerja_kerajaan(1)": 0.841,
+    "kerja_swasta(1)": 0.797,
+    "isi_rumah_3_4(1)": -0.23,
+    "isi_rumah_lebih_5(1)": 0.309,
+    "tanggungan_kurang_2(1)": -0.379,
+    "tanggungan_lebih_5(1)": -0.495,
+    "sewa_bilik(1)": 0.818,
+    "condo(1)": 0.035,
+    "rumah_lain(1)": 0.047,
+    "apartment(1)": 0.029,
+    "rumah_1_unit(1)": -0.327,
+    "rumah_teres(1)": -0.199,
+    "perabot_penuh(1)": -0.45,
+    "perabot_separa(1)": -0.596,
+    "deposit_1_1(1)": -0.275,
+    "deposit_2_1(1)": -0.433,
+    "deposit_3_1(1)": -0.53,
+    "sewa_tahun_3_5(1)": 0.503,
+    "sewa_lebih_6(1)": 0.408,
+    "skim_tidak(1)": 0.515,
+    "Constant": -0.032,
 }
 
-COEF_DEFAULT = COEF_SELANGOR  # Checker tab default
+COEF_PUTRAJAYA_STATE = {
+    "@3.Umur": -0.098,
+    "woman(1)": -1.296,
+    "foreigner(1)": 14.4,
+    "cina(1)": -21.515,
+    "india(1)": -0.309,
+    "bangsa_lain(1)": -17.168,
+    "budhha(1)": 21.369,
+    "hindu(1)": -1.237,
+    "agama_lain(1)": 20.119,
+    "kahwin(1)": 0.722,
+    "bercerai(1)": 2.741,
+    "undergraduate(1)": 0.668,
+    "postgraduate(1)": -2.917,
+    "kerja_sendiri(1)": 0.091,
+    "kerja_kerajaan(1)": 2.668,
+    "kerja_swasta(1)": 2.875,
+    "pesara(1)": 2.367,
+    "isi_rumah_3_4(1)": 1.519,
+    "isi_rumah_lebih_5(1)": 0.139,
+    "tanggungan_3_4(1)": -1.174,
+    "tanggungan_kurang_2(1)": -1.641,
+    "sewa_bilik(1)": 3.542,
+    "condo(1)": -3.775,
+    "rumah_lain(1)": -2.408,
+    "apartment(1)": -2.596,
+    "rumah_1_unit(1)": 19.119,
+    "rumah_teres(1)": 0.854,
+    "perabot_penuh(1)": -1.537,
+    "perabot_separa(1)": -0.494,
+    "deposit_1_1(1)": -3.171,
+    "deposit_2_1(1)": -2.843,
+    "deposit_3_1(1)": -7.405,
+    "sewa_tahun_3_5(1)": -0.279,
+    "sewa_lebih_6(1)": 0.613,
+    "skim_tidak(1)": -0.378,
+    "Constant": 8.023,
+}
+
+COEF_KUALALUMPUR_STATE = {
+    "@3.Umur": -0.002,
+    "woman(1)": -0.188,
+    "foreigner(1)": -0.874,
+    "cina(1)": 0.354,
+    "india(1)": 0.194,
+    "bangsa_lain(1)": 1.206,
+    "budhha(1)": -0.4,
+    "hindu(1)": -0.129,
+    "agama_lain(1)": -0.811,
+    "kahwin(1)": -0.072,
+    "bercerai(1)": -0.788,
+    "undergraduate(1)": 0.507,
+    "postgraduate(1)": -0.913,
+    "kerja_sendiri(1)": 0.884,
+    "kerja_lain(1)": -1.77,
+    "kerja_kerajaan(1)": 1.018,
+    "kerja_swasta(1)": 0.82,
+    "pesara(1)": -0.991,
+    "isi_rumah_3_4(1)": 0.263,
+    "isi_rumah_lebih_5(1)": 0.486,
+    "tanggungan_3_4(1)": -1.008,
+    "tanggungan_kurang_2(1)": -0.397,
+    "sewa_bilik(1)": 1.257,
+    "condo(1)": -1.707,
+    "rumah_lain(1)": -0.271,
+    "apartment(1)": -1.043,
+    "rumah_1_unit(1)": -1.006,
+    "rumah_teres(1)": -0.783,
+    "perabot_penuh(1)": 0.535,
+    "perabot_separa(1)": -0.254,
+    "deposit_1_1(1)": 0.015,
+    "deposit_2_1(1)": -0.397,
+    "deposit_3_1(1)": -0.483,
+    "sewa_tahun_3_5(1)": 0.495,
+    "sewa_lebih_6(1)": 0.885,
+    "skim_tidak(1)": -0.201,
+    "Constant": 1.146,
+}
+
+COEF_BY_STATE = {
+    "Selangor": COEF_SELANGOR_STATE,
+    "Putrajaya": COEF_PUTRAJAYA_STATE,
+    "Kuala Lumpur": COEF_KUALALUMPUR_STATE,
+}
+
+COEF_DEFAULT = COEF_GKV  # Checker tab default (Greater Klang Valley)
 
 
 # ==========================================================
 # ✅ MAP CENTER POINTS (STATE HIGHLIGHT via point)
 # ==========================================================
 STATE_CENTER = {
-    "Selangor": (3.0738, 101.5183),       # Shah Alam area
+    "Selangor": (3.0738, 101.5183),  # Shah Alam area
     "Putrajaya": (2.9264, 101.6964),
     "Kuala Lumpur": (3.1390, 101.6869),
 }
 
 
 # ==========================================================
-# INPUT MAPPING -> MODEL DUMMIES
+# BILINGUAL LABEL + HELP (user guide indicator "?")
+# ==========================================================
+def label_html(en: str, ms: str) -> str:
+    return f"""
+<div class="lbl">
+  <div class="en">{en}</div>
+  <div class="ms">{ms}</div>
+</div>
+""".strip()
+
+
+def help_text(en: str, ms: str) -> str:
+    return f"EN: {en}\nBM: {ms}"
+
+
+def fmt(field: str):
+    m = DISPLAY.get(field, {})
+    return lambda x: m.get(x, str(x))
+
+
+# ==========================================================
+# INPUT MAPPING -> MODEL DUMMIES (supports BOTH key styles)
 # ==========================================================
 def build_inputs(
     coef: dict,
@@ -318,108 +528,222 @@ def build_inputs(
     skim: str,
 ) -> dict:
     inp = {k: 0.0 for k in coef.keys()}
-    inp["Constant"] = 1.0
-    inp["Umur"] = float(age)
+    if "Constant" in inp:
+        inp["Constant"] = 1.0
 
-    # Gender (1) = Perempuan
-    inp["Jantina ketua keluarga(1)"] = 1.0 if gender == "Perempuan" else 0.0
+    # Age
+    if "Umur" in inp:
+        inp["Umur"] = float(age)
+    if "@3.Umur" in inp:
+        inp["@3.Umur"] = float(age)
 
-    # Nationality (1) = Non-Malaysian
-    inp["Warganegara(1)"] = 1.0 if nationality == "Non-Malaysian" else 0.0
+    # Gender: female
+    is_female = 1.0 if gender == "Perempuan" else 0.0
+    if "Jantina ketua keluarga(1)" in inp:
+        inp["Jantina ketua keluarga(1)"] = is_female
+    if "woman(1)" in inp:
+        inp["woman(1)"] = is_female
+
+    # Nationality: foreigner / non-malaysian
+    is_foreigner = 1.0 if nationality == "Non-Malaysian" else 0.0
+    if "Warganegara(1)" in inp:
+        inp["Warganegara(1)"] = is_foreigner
+    if "foreigner(1)" in inp:
+        inp["foreigner(1)"] = is_foreigner
 
     # Ethnicity base = Bumiputera
-    if ethnicity == "Cina":
-        inp["Bangsa=Cina(1)"] = 1.0
-    elif ethnicity == "India":
-        inp["Bangsa=India(1)"] = 1.0
-    elif ethnicity == "Lain-lain":
-        inp["Bangsa=Lain-lain(1)"] = 1.0
+    is_cina = 1.0 if ethnicity == "Cina" else 0.0
+    is_india = 1.0 if ethnicity == "India" else 0.0
+    is_other_eth = 1.0 if ethnicity == "Lain-lain" else 0.0
+    if "Bangsa=Cina(1)" in inp:
+        inp["Bangsa=Cina(1)"] = is_cina
+    if "Bangsa=India(1)" in inp:
+        inp["Bangsa=India(1)"] = is_india
+    if "Bangsa=Lain-lain(1)" in inp:
+        inp["Bangsa=Lain-lain(1)"] = is_other_eth
+    if "cina(1)" in inp:
+        inp["cina(1)"] = is_cina
+    if "india(1)" in inp:
+        inp["india(1)"] = is_india
+    if "bangsa_lain(1)" in inp:
+        inp["bangsa_lain(1)"] = is_other_eth
 
     # Religion base = Islam
-    if religion == "Buddha":
-        inp["Agama=Buddha(1)"] = 1.0
-    elif religion == "Hindu":
-        inp["Agama=Hindu(1)"] = 1.0
-    elif religion == "Lain-lain":
-        inp["Agama=Lain-lain(1)"] = 1.0
+    is_buddha = 1.0 if religion == "Buddha" else 0.0
+    is_hindu = 1.0 if religion == "Hindu" else 0.0
+    is_other_rel = 1.0 if religion == "Lain-lain" else 0.0
+    if "Agama=Buddha(1)" in inp:
+        inp["Agama=Buddha(1)"] = is_buddha
+    if "Agama=Hindu(1)" in inp:
+        inp["Agama=Hindu(1)"] = is_hindu
+    if "Agama=Lain-lain(1)" in inp:
+        inp["Agama=Lain-lain(1)"] = is_other_rel
+    if "budhha(1)" in inp:
+        inp["budhha(1)"] = is_buddha
+    if "hindu(1)" in inp:
+        inp["hindu(1)"] = is_hindu
+    if "agama_lain(1)" in inp:
+        inp["agama_lain(1)"] = is_other_rel
 
     # Marital base = Single
-    if marital == "Berkahwin":
-        inp["Status Perkahwinan=Berkahwin(1)"] = 1.0
-    elif marital == "Bercerai":
-        inp["Status Perkahwinan=Cerai/BaluDuda/Pisah(1)"] = 1.0
+    is_married = 1.0 if marital == "Berkahwin" else 0.0
+    is_divorced = 1.0 if marital == "Bercerai" else 0.0
+    if "Status Perkahwinan=Berkahwin(1)" in inp:
+        inp["Status Perkahwinan=Berkahwin(1)"] = is_married
+    if "Status Perkahwinan=Cerai/BaluDuda/Pisah(1)" in inp:
+        inp["Status Perkahwinan=Cerai/BaluDuda/Pisah(1)"] = is_divorced
+    if "kahwin(1)" in inp:
+        inp["kahwin(1)"] = is_married
+    if "bercerai(1)" in inp:
+        inp["bercerai(1)"] = is_divorced
 
     # Education base = SPM dan ke bawah
-    if edu == "Undergraduate":
-        inp["Tahap Pendidikan=Undergraduate(1)"] = 1.0
-    elif edu == "Postgraduate":
-        inp["Tahap Pendidikan=Postgraduate(1)"] = 1.0
+    is_ug = 1.0 if edu == "Undergraduate" else 0.0
+    is_pg = 1.0 if edu == "Postgraduate" else 0.0
+    if "Tahap Pendidikan=Undergraduate(1)" in inp:
+        inp["Tahap Pendidikan=Undergraduate(1)"] = is_ug
+    if "Tahap Pendidikan=Postgraduate(1)" in inp:
+        inp["Tahap Pendidikan=Postgraduate(1)"] = is_pg
+    if "undergraduate(1)" in inp:
+        inp["undergraduate(1)"] = is_ug
+    if "postgraduate(1)" in inp:
+        inp["postgraduate(1)"] = is_pg
 
     # Occupation base = Tidak bekerja
-    if job == "Bekerja sendiri":
-        inp["Pekerjaan=Bekerja sendiri(1)"] = 1.0
-    elif job == "Lain-lain":
-        inp["Pekerjaan=Lain-lain(1)"] = 1.0
-    elif job == "Pekerja Kerajaan":
-        inp["Pekerjaan=Pekerja Kerajaan(1)"] = 1.0
-    elif job == "Pekerja Swasta":
-        inp["Pekerjaan=Pekerja Swasta(1)"] = 1.0
-    elif job == "Pesara":
-        inp["Pekerjaan=Pesara(1)"] = 1.0
+    is_self = 1.0 if job == "Bekerja sendiri" else 0.0
+    is_other_job = 1.0 if job == "Lain-lain" else 0.0
+    is_gov = 1.0 if job == "Pekerja Kerajaan" else 0.0
+    is_priv = 1.0 if job == "Pekerja Swasta" else 0.0
+    is_ret = 1.0 if job == "Pesara" else 0.0
+
+    if "Pekerjaan=Bekerja sendiri(1)" in inp:
+        inp["Pekerjaan=Bekerja sendiri(1)"] = is_self
+    if "Pekerjaan=Lain-lain(1)" in inp:
+        inp["Pekerjaan=Lain-lain(1)"] = is_other_job
+    if "Pekerjaan=Pekerja Kerajaan(1)" in inp:
+        inp["Pekerjaan=Pekerja Kerajaan(1)"] = is_gov
+    if "Pekerjaan=Pekerja Swasta(1)" in inp:
+        inp["Pekerjaan=Pekerja Swasta(1)"] = is_priv
+    if "Pekerjaan=Pesara(1)" in inp:
+        inp["Pekerjaan=Pesara(1)"] = is_ret
+
+    if "kerja_sendiri(1)" in inp:
+        inp["kerja_sendiri(1)"] = is_self
+    if "kerja_lain(1)" in inp:
+        inp["kerja_lain(1)"] = is_other_job
+    if "kerja_kerajaan(1)" in inp:
+        inp["kerja_kerajaan(1)"] = is_gov
+    if "kerja_swasta(1)" in inp:
+        inp["kerja_swasta(1)"] = is_priv
+    if "pesara(1)" in inp:
+        inp["pesara(1)"] = is_ret
 
     # Household base = Kurang dari 2 orang
-    if household == "3 - 4 orang":
-        inp["Bilangan isi rumah=3-4 orang(1)"] = 1.0
-    elif household == "Lebih 5 orang":
-        inp["Bilangan isi rumah=5+ orang(1)"] = 1.0
+    is_hh_3_4 = 1.0 if household == "3 - 4 orang" else 0.0
+    is_hh_5p = 1.0 if household == "Lebih 5 orang" else 0.0
+    if "Bilangan isi rumah=3-4 orang(1)" in inp:
+        inp["Bilangan isi rumah=3-4 orang(1)"] = is_hh_3_4
+    if "Bilangan isi rumah=5+ orang(1)" in inp:
+        inp["Bilangan isi rumah=5+ orang(1)"] = is_hh_5p
+    if "isi_rumah_3_4(1)" in inp:
+        inp["isi_rumah_3_4(1)"] = is_hh_3_4
+    if "isi_rumah_lebih_5(1)" in inp:
+        inp["isi_rumah_lebih_5(1)"] = is_hh_5p
 
-    # Dependents base = Kurang dari 2 orang
-    if dependents == "3 - 4 orang":
-        inp["Bilangan tanggungan=3-4 orang(1)"] = 1.0
-    elif dependents == "Lebih 5 orang":
-        inp["Bilangan tanggungan=5+ orang(1)"] = 1.0
+    # Dependents (varies by state tables)
+    is_dep_less2 = 1.0 if dependents == "Kurang dari 2 orang" else 0.0
+    is_dep_3_4 = 1.0 if dependents == "3 - 4 orang" else 0.0
+    is_dep_5p = 1.0 if dependents == "Lebih 5 orang" else 0.0
+
+    # GKV style
+    if "Bilangan tanggungan=3-4 orang(1)" in inp:
+        inp["Bilangan tanggungan=3-4 orang(1)"] = is_dep_3_4
+    if "Bilangan tanggungan=5+ orang(1)" in inp:
+        inp["Bilangan tanggungan=5+ orang(1)"] = is_dep_5p
+
+    # State-table style
+    if "tanggungan_kurang_2(1)" in inp:
+        inp["tanggungan_kurang_2(1)"] = is_dep_less2
+    if "tanggungan_3_4(1)" in inp:
+        inp["tanggungan_3_4(1)"] = is_dep_3_4
+    if "tanggungan_lebih_5(1)" in inp:
+        inp["tanggungan_lebih_5(1)"] = is_dep_5p
 
     # Jenis Penyewaan base = Rumah
-    if jenis_penyewaan == "Bilik":
-        inp["Jenis Penyewaan=Bilik(1)"] = 1.0
+    is_room = 1.0 if jenis_penyewaan == "Bilik" else 0.0
+    if "Jenis Penyewaan=Bilik(1)" in inp:
+        inp["Jenis Penyewaan=Bilik(1)"] = is_room
+    if "sewa_bilik(1)" in inp:
+        inp["sewa_bilik(1)"] = is_room
 
-    # Jenis Rumah Sewa base = Rumah
-    if jenis_rumah == "Condominium":
-        inp["Jenis rumah sewa=Kondominium(1)"] = 1.0
-    elif jenis_rumah == "Pangsapuri":
-        inp["Jenis rumah sewa=Pangsapuri(1)"] = 1.0
-    elif jenis_rumah == "Rumah Teres":
-        inp["Jenis rumah sewa=Rumah Teres(1)"] = 1.0
-    elif jenis_rumah == "Rumah 1 unit":
-        inp["Jenis rumah sewa=Rumah 1 unit(1)"] = 1.0
-    elif jenis_rumah == "Lain-lain":
-        inp["Jenis rumah sewa=Lain-lain(1)"] = 1.0
-    # Flat treated as base here
+    # Jenis Rumah Sewa base = Rumah/Flat (depends on model, keep dummies only)
+    is_condo = 1.0 if jenis_rumah == "Condominium" else 0.0
+    is_apartment = 1.0 if jenis_rumah == "Pangsapuri" else 0.0
+    is_teres = 1.0 if jenis_rumah == "Rumah Teres" else 0.0
+    is_1unit = 1.0 if jenis_rumah == "Rumah 1 unit" else 0.0
+    is_other_house = 1.0 if jenis_rumah == "Lain-lain" else 0.0
+
+    if "Jenis rumah sewa=Kondominium(1)" in inp:
+        inp["Jenis rumah sewa=Kondominium(1)"] = is_condo
+    if "Jenis rumah sewa=Pangsapuri(1)" in inp:
+        inp["Jenis rumah sewa=Pangsapuri(1)"] = is_apartment
+    if "Jenis rumah sewa=Rumah Teres(1)" in inp:
+        inp["Jenis rumah sewa=Rumah Teres(1)"] = is_teres
+    if "Jenis rumah sewa=Rumah 1 unit(1)" in inp:
+        inp["Jenis rumah sewa=Rumah 1 unit(1)"] = is_1unit
+    if "Jenis rumah sewa=Lain-lain(1)" in inp:
+        inp["Jenis rumah sewa=Lain-lain(1)"] = is_other_house
+
+    if "condo(1)" in inp:
+        inp["condo(1)"] = is_condo
+    if "apartment(1)" in inp:
+        inp["apartment(1)"] = is_apartment
+    if "rumah_teres(1)" in inp:
+        inp["rumah_teres(1)"] = is_teres
+    if "rumah_1_unit(1)" in inp:
+        inp["rumah_1_unit(1)"] = is_1unit
+    if "rumah_lain(1)" in inp:
+        inp["rumah_lain(1)"] = is_other_house
 
     # Furnished base = Tiada perabot
-    if furnished == "Perabot penuh":
-        inp["Jenis kelengkapan perabot=Berperabot penuh(1)"] = 1.0
-    elif furnished == "Perabot separa":
-        inp["Jenis kelengkapan perabot=Berperabot separa(1)"] = 1.0
+    is_full = 1.0 if furnished == "Perabot penuh" else 0.0
+    is_partial = 1.0 if furnished == "Perabot separa" else 0.0
+    if "Jenis kelengkapan perabot=Berperabot penuh(1)" in inp:
+        inp["Jenis kelengkapan perabot=Berperabot penuh(1)"] = is_full
+    if "Jenis kelengkapan perabot=Berperabot separa(1)" in inp:
+        inp["Jenis kelengkapan perabot=Berperabot separa(1)"] = is_partial
+    if "perabot_penuh(1)" in inp:
+        inp["perabot_penuh(1)"] = is_full
+    if "perabot_separa(1)" in inp:
+        inp["perabot_separa(1)"] = is_partial
 
     # Deposit base = Tiada deposit
-    if deposit == "1 + 1":
-        inp["deposit_1_1(1)"] = 1.0
-    elif deposit == "2 + 1":
-        inp["deposit_2_1(1)"] = 1.0
-    elif deposit == "3 + 1":
-        inp["deposit_3_1(1)"] = 1.0
+    if "deposit_1_1(1)" in inp:
+        inp["deposit_1_1(1)"] = 1.0 if deposit == "1 + 1" else 0.0
+    if "deposit_2_1(1)" in inp:
+        inp["deposit_2_1(1)"] = 1.0 if deposit == "2 + 1" else 0.0
+    if "deposit_3_1(1)" in inp:
+        inp["deposit_3_1(1)"] = 1.0 if deposit == "3 + 1" else 0.0
 
     # Tempoh Menyewa base = Kurang dari 2 tahun
-    if tempoh == "3 - 5 tahun":
-        inp["Berapa lama anda telah menyewa rumah=3-5 tahun(1)"] = 1.0
-    elif tempoh == "Lebih 6 tahun":
-        inp["Berapa lama anda telah menyewa rumah=6+ tahun(1)"] = 1.0
+    is_3_5 = 1.0 if tempoh == "3 - 5 tahun" else 0.0
+    is_6p = 1.0 if tempoh == "Lebih 6 tahun" else 0.0
+    if "Berapa lama anda telah menyewa rumah=3-5 tahun(1)" in inp:
+        inp["Berapa lama anda telah menyewa rumah=3-5 tahun(1)"] = is_3_5
+    if "Berapa lama anda telah menyewa rumah=6+ tahun(1)" in inp:
+        inp["Berapa lama anda telah menyewa rumah=6+ tahun(1)"] = is_6p
+    if "sewa_tahun_3_5(1)" in inp:
+        inp["sewa_tahun_3_5(1)"] = is_3_5
+    if "sewa_lebih_6(1)" in inp:
+        inp["sewa_lebih_6(1)"] = is_6p
 
-    # Skim base = Tidak, (1)=Ya
-    inp["Adakah anda mengetahui terdapat skim mampu sewa di Malaysia? (contoh: SMART sewa)(1)"] = (
-        1.0 if skim == "Ya" else 0.0
-    )
+    # Skim (note: state tables use skim_tidak(1) = 1 if "Tidak")
+    if "Adakah anda mengetahui terdapat skim mampu sewa di Malaysia? (contoh: SMART sewa)(1)" in inp:
+        inp["Adakah anda mengetahui terdapat skim mampu sewa di Malaysia? (contoh: SMART sewa)(1)"] = (
+            1.0 if skim == "Ya" else 0.0
+        )
+    if "skim_tidak(1)" in inp:
+        inp["skim_tidak(1)"] = 1.0 if skim == "Tidak" else 0.0
 
     return inp
 
@@ -469,7 +793,6 @@ if dark_mode:
     INPUT_BORDER = "rgba(167, 139, 250, 0.22)"
     INPUT_TEXT = "#f8fafc"
 
-    # ✅ IMPORTANT: Dark mode dropdown list should be WHITE background + BLACK font
     MENU_BG = "#ffffff"
     MENU_TEXT = "#111827"
     MENU_HOVER = "rgba(139, 92, 246, 0.12)"
@@ -500,7 +823,7 @@ st.markdown(
     color: {TXT} !important;
   }}
 
-  /* ✅ FULL WIDTH FIX (no max-width limit) */
+  /* ✅ FULL WIDTH FIX */
   .block-container {{
     padding-top: .75rem;
     max-width: 100% !important;
@@ -516,6 +839,22 @@ st.markdown(
 
   h1,h2,h3,h4,h5,h6, p, div, span, label, small {{
     color: {TXT} !important;
+  }}
+
+  /* Bilingual label */
+  .lbl {{
+    margin: 0 0 .25rem 0;
+    line-height: 1.1;
+  }}
+  .lbl .en {{
+    font-weight: 800;
+    font-size: 14px;
+    color: {TXT};
+  }}
+  .lbl .ms {{
+    font-size: 12px;
+    opacity: .80;
+    color: {TXT};
   }}
 
   /* Inputs */
@@ -539,15 +878,10 @@ st.markdown(
     -webkit-text-fill-color: {INPUT_TEXT} !important;
   }}
 
-  /* ==========================================================
-     ✅ Dropdown list (options) - ALWAYS readable
-     Dark mode: WHITE bg + BLACK font
-     Light mode: already OK, still keep consistent
-     ========================================================== */
+  /* ✅ Dropdown list (options) - ALWAYS readable */
   div[role="dialog"] {{
     background: {MENU_BG} !important;
   }}
-
   div[role="dialog"] [data-baseweb="menu"],
   div[role="dialog"] ul[role="listbox"],
   [data-baseweb="menu"],
@@ -558,7 +892,6 @@ st.markdown(
     background: {MENU_BG} !important;
     border: 1px solid {INPUT_BORDER} !important;
   }}
-
   div[role="dialog"] [data-baseweb="menu"] *,
   div[role="dialog"] ul[role="listbox"] *,
   [data-baseweb="menu"] *,
@@ -569,7 +902,6 @@ st.markdown(
     -webkit-text-fill-color: {MENU_TEXT} !important;
     opacity: 1 !important;
   }}
-
   div[role="dialog"] li[role="option"],
   li[role="option"] {{
     background: transparent !important;
@@ -577,12 +909,10 @@ st.markdown(
     -webkit-text-fill-color: {MENU_TEXT} !important;
     opacity: 1 !important;
   }}
-
   div[role="dialog"] li[role="option"]:hover,
   li[role="option"]:hover {{
     background: {MENU_HOVER} !important;
   }}
-
   div[role="dialog"] [aria-selected="true"],
   [aria-selected="true"] {{
     background: {MENU_HOVER} !important;
@@ -618,7 +948,7 @@ st.markdown(
     background: rgba(239,68,68,0.16);
   }}
 
-  /* Metrics size (avoid "kecik") */
+  /* Metrics size */
   [data-testid="stMetricValue"] > div {{
     font-size: 2rem !important;
     line-height: 1.15 !important;
@@ -651,7 +981,7 @@ tab_checker, tab_negeri = st.tabs(["✅ Checker", "🗺️ By Negeri"])
 
 
 # ==========================================================
-# TAB 1: CHECKER (DEFAULT COEF)
+# TAB 1: CHECKER (GKV COEF - MAINTAIN)
 # ==========================================================
 with tab_checker:
     left, right = st.columns([1, 1.35], gap="large")
@@ -662,34 +992,260 @@ with tab_checker:
 
         colA, colB = st.columns(2)
         with colA:
-            age = st.number_input("Umur (tahun)", min_value=15, max_value=100, value=38, step=1)
-            gender = st.selectbox("Jantina", OPTIONS["Gender"], index=0)
-            nationality = st.selectbox("Warganegara", OPTIONS["Nationality"], index=0)
-            ethnicity = st.selectbox("Bangsa", OPTIONS["Ethnicity"], index=0)
-            religion = st.selectbox("Agama", OPTIONS["Religion"], index=0)
-            marital = st.selectbox("Status Perkahwinan", OPTIONS["Marital Status"], index=0)
-            edu = st.selectbox("Tahap Pendidikan", OPTIONS["Education Level"], index=0)
+            st.markdown(label_html("Age (years)", "Umur (tahun)"), unsafe_allow_html=True)
+            age = st.number_input(
+                "age_hidden",
+                min_value=15,
+                max_value=100,
+                value=38,
+                step=1,
+                label_visibility="collapsed",
+                help=help_text(
+                    "Enter the respondent's age in years.",
+                    "Masukkan umur responden dalam tahun.",
+                ),
+            )
+
+            st.markdown(label_html("Gender", "Jantina"), unsafe_allow_html=True)
+            gender = st.selectbox(
+                "gender_hidden",
+                OPTIONS["Gender"],
+                index=0,
+                format_func=fmt("Gender"),
+                label_visibility="collapsed",
+                help=help_text(
+                    "Select the gender of household head.",
+                    "Pilih jantina ketua isi rumah.",
+                ),
+            )
+
+            st.markdown(label_html("Nationality", "Warganegara"), unsafe_allow_html=True)
+            nationality = st.selectbox(
+                "nat_hidden",
+                OPTIONS["Nationality"],
+                index=0,
+                format_func=fmt("Nationality"),
+                label_visibility="collapsed",
+                help=help_text(
+                    "Select whether the respondent is Malaysian or non-Malaysian.",
+                    "Pilih sama ada responden warganegara atau bukan warganegara.",
+                ),
+            )
+
+            st.markdown(label_html("Ethnicity", "Bangsa"), unsafe_allow_html=True)
+            ethnicity = st.selectbox(
+                "eth_hidden",
+                OPTIONS["Ethnicity"],
+                index=0,
+                format_func=fmt("Ethnicity"),
+                label_visibility="collapsed",
+                help=help_text(
+                    "Choose the respondent's ethnicity category.",
+                    "Pilih kategori bangsa responden.",
+                ),
+            )
+
+            st.markdown(label_html("Religion", "Agama"), unsafe_allow_html=True)
+            religion = st.selectbox(
+                "rel_hidden",
+                OPTIONS["Religion"],
+                index=0,
+                format_func=fmt("Religion"),
+                label_visibility="collapsed",
+                help=help_text(
+                    "Choose the respondent's religion category.",
+                    "Pilih kategori agama responden.",
+                ),
+            )
+
+            st.markdown(label_html("Marital status", "Status perkahwinan"), unsafe_allow_html=True)
+            marital = st.selectbox(
+                "mar_hidden",
+                OPTIONS["Marital Status"],
+                index=0,
+                format_func=fmt("Marital Status"),
+                label_visibility="collapsed",
+                help=help_text(
+                    "Select the respondent's marital status.",
+                    "Pilih status perkahwinan responden.",
+                ),
+            )
+
+            st.markdown(label_html("Education level", "Tahap pendidikan"), unsafe_allow_html=True)
+            edu = st.selectbox(
+                "edu_hidden",
+                OPTIONS["Education Level"],
+                index=0,
+                format_func=fmt("Education Level"),
+                label_visibility="collapsed",
+                help=help_text(
+                    "Select the highest education level.",
+                    "Pilih tahap pendidikan tertinggi.",
+                ),
+            )
 
         with colB:
-            job = st.selectbox("Pekerjaan", OPTIONS["Occupation"], index=0)
-            household = st.selectbox("Bilangan Isi Rumah", OPTIONS["Household Size"], index=0)
-            dependents = st.selectbox("Bilangan Tanggungan", OPTIONS["Number of Dependents"], index=0)
-            jenis_penyewaan = st.selectbox("Jenis Penyewaan", OPTIONS["Jenis Penyewaan"], index=0)
-            jenis_rumah = st.selectbox("Jenis Rumah Sewa", OPTIONS["Jenis Rumah Sewa"], index=0)
-            furnished = st.selectbox("Jenis Kelengkapan Perabot", OPTIONS["Furnished Type"], index=0)
-            deposit = st.selectbox("Deposit", OPTIONS["Deposit"], index=0)
-            tempoh = st.selectbox("Tempoh Menyewa", OPTIONS["Tempoh Menyewa"], index=0)
-            skim = st.selectbox("Skim", OPTIONS["Skim"], index=1)
+            st.markdown(label_html("Occupation", "Pekerjaan"), unsafe_allow_html=True)
+            job = st.selectbox(
+                "job_hidden",
+                OPTIONS["Occupation"],
+                index=0,
+                format_func=fmt("Occupation"),
+                label_visibility="collapsed",
+                help=help_text(
+                    "Select the respondent's occupation category.",
+                    "Pilih kategori pekerjaan responden.",
+                ),
+            )
+
+            st.markdown(label_html("Household size", "Bilangan isi rumah"), unsafe_allow_html=True)
+            household = st.selectbox(
+                "hh_hidden",
+                OPTIONS["Household Size"],
+                index=0,
+                format_func=fmt("Household Size"),
+                label_visibility="collapsed",
+                help=help_text(
+                    "Total number of people living in the household.",
+                    "Jumlah orang yang tinggal dalam isi rumah.",
+                ),
+            )
+
+            st.markdown(label_html("Number of dependents", "Bilangan tanggungan"), unsafe_allow_html=True)
+            dependents = st.selectbox(
+                "dep_hidden",
+                OPTIONS["Number of Dependents"],
+                index=0,
+                format_func=fmt("Number of Dependents"),
+                label_visibility="collapsed",
+                help=help_text(
+                    "Number of dependents financially supported by the respondent.",
+                    "Bilangan tanggungan yang ditanggung dari segi kewangan.",
+                ),
+            )
+
+            st.markdown(label_html("Rental type", "Jenis penyewaan"), unsafe_allow_html=True)
+            jenis_penyewaan = st.selectbox(
+                "renttype_hidden",
+                OPTIONS["Jenis Penyewaan"],
+                index=0,
+                format_func=fmt("Jenis Penyewaan"),
+                label_visibility="collapsed",
+                help=help_text(
+                    "Choose whether renting a whole unit/house or just a room.",
+                    "Pilih sama ada menyewa rumah/unit atau bilik sahaja.",
+                ),
+            )
+
+            st.markdown(label_html("Type of rental housing", "Jenis rumah sewa"), unsafe_allow_html=True)
+            jenis_rumah = st.selectbox(
+                "house_hidden",
+                OPTIONS["Jenis Rumah Sewa"],
+                index=0,
+                format_func=fmt("Jenis Rumah Sewa"),
+                label_visibility="collapsed",
+                help=help_text(
+                    "Select the rental housing type (e.g., flat/condo/terrace).",
+                    "Pilih jenis rumah sewa (cth: flat/kondo/teres).",
+                ),
+            )
+
+            st.markdown(label_html("Furnished type", "Jenis kelengkapan perabot"), unsafe_allow_html=True)
+            furnished = st.selectbox(
+                "furn_hidden",
+                OPTIONS["Furnished Type"],
+                index=0,
+                format_func=fmt("Furnished Type"),
+                label_visibility="collapsed",
+                help=help_text(
+                    "Indicate the furnishing level of the rental unit.",
+                    "Nyatakan tahap perabot bagi rumah sewa.",
+                ),
+            )
+
+            st.markdown(label_html("Deposit", "Deposit"), unsafe_allow_html=True)
+            deposit = st.selectbox(
+                "depst_hidden",
+                OPTIONS["Deposit"],
+                index=0,
+                format_func=fmt("Deposit"),
+                label_visibility="collapsed",
+                help=help_text(
+                    "Choose the deposit arrangement (e.g., 2+1 means 2 months deposit + 1 month utility).",
+                    "Pilih jenis deposit (cth: 2+1 = 2 bulan deposit + 1 bulan utiliti).",
+                ),
+            )
+
+            st.markdown(label_html("Total years renting", "Tempoh menyewa"), unsafe_allow_html=True)
+            tempoh = st.selectbox(
+                "temp_hidden",
+                OPTIONS["Tempoh Menyewa"],
+                index=0,
+                format_func=fmt("Tempoh Menyewa"),
+                label_visibility="collapsed",
+                help=help_text(
+                    "How long the respondent has been renting.",
+                    "Tempoh responden telah menyewa.",
+                ),
+            )
+
+            st.markdown(label_html("Know SMART SEWA scheme?", "Tahu skim SMART SEWA?"), unsafe_allow_html=True)
+            skim = st.selectbox(
+                "skim_hidden",
+                OPTIONS["Skim"],
+                index=1,
+                format_func=fmt("Skim"),
+                label_visibility="collapsed",
+                help=help_text(
+                    "Whether the respondent is aware of affordable rental schemes (e.g., SMART SEWA).",
+                    "Sama ada responden tahu skim mampu sewa (cth: SMART SEWA).",
+                ),
+            )
 
         st.divider()
         st.subheader("Income & Rent Inputs")
+
         c1, c2, c3 = st.columns(3)
         with c1:
-            income = st.number_input("Monthly Income (RM)", min_value=0.0, value=6000.0, step=100.0)
+            st.markdown(label_html("Monthly income (RM)", "Pendapatan bulanan (RM)"), unsafe_allow_html=True)
+            income = st.number_input(
+                "income_hidden",
+                min_value=0.0,
+                value=6000.0,
+                step=100.0,
+                label_visibility="collapsed",
+                help=help_text(
+                    "Enter total monthly household income in RM.",
+                    "Masukkan jumlah pendapatan isi rumah bulanan (RM).",
+                ),
+            )
         with c2:
-            rent = st.number_input("Monthly Rent (RM)", min_value=0.0, value=2000.0, step=50.0)
+            st.markdown(label_html("Monthly rent (RM)", "Sewa bulanan (RM)"), unsafe_allow_html=True)
+            rent = st.number_input(
+                "rent_hidden",
+                min_value=0.0,
+                value=2000.0,
+                step=50.0,
+                label_visibility="collapsed",
+                help=help_text(
+                    "Enter monthly rent amount in RM.",
+                    "Masukkan jumlah sewa bulanan (RM).",
+                ),
+            )
         with c3:
-            ratio = st.number_input("Rent ratio threshold", min_value=0.0, max_value=1.0, value=0.38, step=0.01)
+            st.markdown(label_html("Rent ratio threshold", "Had nisbah sewa"), unsafe_allow_html=True)
+            ratio = st.number_input(
+                "ratio_hidden",
+                min_value=0.0,
+                max_value=1.0,
+                value=0.38,
+                step=0.01,
+                label_visibility="collapsed",
+                help=help_text(
+                    "Max recommended rent share of income (example: 0.38 = 38%).",
+                    "Had maksimum sewa berbanding pendapatan (cth: 0.38 = 38%).",
+                ),
+            )
 
         run = st.button("✅ Run Check", use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
@@ -751,7 +1307,6 @@ with tab_checker:
         if res is None:
             st.info("Click **Run Check** to show results.")
         else:
-            # ✅ GENERAL labels (no formulas shown)
             st.markdown(
                 f"""
 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
@@ -812,9 +1367,18 @@ with tab_negeri:
     st.markdown('<div class="purple-card">', unsafe_allow_html=True)
     st.subheader("By Negeri")
 
-    negeri = st.selectbox("Pilih Negeri", ["Selangor", "Putrajaya", "Kuala Lumpur"], index=0)
+    st.markdown(label_html("Select state", "Pilih negeri"), unsafe_allow_html=True)
+    negeri = st.selectbox(
+        "negeri_hidden",
+        ["Selangor", "Putrajaya", "Kuala Lumpur"],
+        index=0,
+        label_visibility="collapsed",
+        help=help_text(
+            "Choose a state to use the state-specific coefficients.",
+            "Pilih negeri untuk guna pekali (coefficients) khusus negeri.",
+        ),
+    )
 
-    # ✅ map highlight (point at state center)
     lat, lon = STATE_CENTER[negeri]
     st.caption(f"Location preview: {negeri}")
     st.map(pd.DataFrame([{"lat": lat, "lon": lon}]), zoom=9)
@@ -828,34 +1392,184 @@ with tab_negeri:
 
         colA, colB = st.columns(2)
         with colA:
-            ageS = st.number_input("Umur (tahun)", min_value=15, max_value=100, value=38, step=1, key="ageS")
-            genderS = st.selectbox("Jantina", OPTIONS["Gender"], index=0, key="genderS")
-            nationalityS = st.selectbox("Warganegara", OPTIONS["Nationality"], index=0, key="nationalityS")
-            ethnicityS = st.selectbox("Bangsa", OPTIONS["Ethnicity"], index=0, key="ethnicityS")
-            religionS = st.selectbox("Agama", OPTIONS["Religion"], index=0, key="religionS")
-            maritalS = st.selectbox("Status Perkahwinan", OPTIONS["Marital Status"], index=0, key="maritalS")
-            eduS = st.selectbox("Tahap Pendidikan", OPTIONS["Education Level"], index=0, key="eduS")
+            st.markdown(label_html("Age (years)", "Umur (tahun)"), unsafe_allow_html=True)
+            ageS = st.number_input(
+                "ageS",
+                min_value=15,
+                max_value=100,
+                value=38,
+                step=1,
+                help=help_text("Enter age in years.", "Masukkan umur dalam tahun."),
+            )
+
+            st.markdown(label_html("Gender", "Jantina"), unsafe_allow_html=True)
+            genderS = st.selectbox(
+                "genderS",
+                OPTIONS["Gender"],
+                index=0,
+                format_func=fmt("Gender"),
+                help=help_text("Select gender.", "Pilih jantina."),
+            )
+
+            st.markdown(label_html("Nationality", "Warganegara"), unsafe_allow_html=True)
+            nationalityS = st.selectbox(
+                "nationalityS",
+                OPTIONS["Nationality"],
+                index=0,
+                format_func=fmt("Nationality"),
+                help=help_text("Select nationality.", "Pilih warganegara."),
+            )
+
+            st.markdown(label_html("Ethnicity", "Bangsa"), unsafe_allow_html=True)
+            ethnicityS = st.selectbox(
+                "ethnicityS",
+                OPTIONS["Ethnicity"],
+                index=0,
+                format_func=fmt("Ethnicity"),
+                help=help_text("Select ethnicity.", "Pilih bangsa."),
+            )
+
+            st.markdown(label_html("Religion", "Agama"), unsafe_allow_html=True)
+            religionS = st.selectbox(
+                "religionS",
+                OPTIONS["Religion"],
+                index=0,
+                format_func=fmt("Religion"),
+                help=help_text("Select religion.", "Pilih agama."),
+            )
+
+            st.markdown(label_html("Marital status", "Status perkahwinan"), unsafe_allow_html=True)
+            maritalS = st.selectbox(
+                "maritalS",
+                OPTIONS["Marital Status"],
+                index=0,
+                format_func=fmt("Marital Status"),
+                help=help_text("Select marital status.", "Pilih status perkahwinan."),
+            )
+
+            st.markdown(label_html("Education level", "Tahap pendidikan"), unsafe_allow_html=True)
+            eduS = st.selectbox(
+                "eduS",
+                OPTIONS["Education Level"],
+                index=0,
+                format_func=fmt("Education Level"),
+                help=help_text("Select education level.", "Pilih tahap pendidikan."),
+            )
 
         with colB:
-            jobS = st.selectbox("Pekerjaan", OPTIONS["Occupation"], index=0, key="jobS")
-            householdS = st.selectbox("Bilangan Isi Rumah", OPTIONS["Household Size"], index=0, key="householdS")
-            dependentsS = st.selectbox("Bilangan Tanggungan", OPTIONS["Number of Dependents"], index=0, key="dependentsS")
-            jenis_penyewaanS = st.selectbox("Jenis Penyewaan", OPTIONS["Jenis Penyewaan"], index=0, key="jenis_penyewaanS")
-            jenis_rumahS = st.selectbox("Jenis Rumah Sewa", OPTIONS["Jenis Rumah Sewa"], index=0, key="jenis_rumahS")
-            furnishedS = st.selectbox("Jenis Kelengkapan Perabot", OPTIONS["Furnished Type"], index=0, key="furnishedS")
-            depositS = st.selectbox("Deposit", OPTIONS["Deposit"], index=0, key="depositS")
-            tempohS = st.selectbox("Tempoh Menyewa", OPTIONS["Tempoh Menyewa"], index=0, key="tempohS")
-            skimS = st.selectbox("Skim", OPTIONS["Skim"], index=1, key="skimS")
+            st.markdown(label_html("Occupation", "Pekerjaan"), unsafe_allow_html=True)
+            jobS = st.selectbox(
+                "jobS",
+                OPTIONS["Occupation"],
+                index=0,
+                format_func=fmt("Occupation"),
+                help=help_text("Select occupation.", "Pilih pekerjaan."),
+            )
+
+            st.markdown(label_html("Household size", "Bilangan isi rumah"), unsafe_allow_html=True)
+            householdS = st.selectbox(
+                "householdS",
+                OPTIONS["Household Size"],
+                index=0,
+                format_func=fmt("Household Size"),
+                help=help_text("Select household size.", "Pilih bilangan isi rumah."),
+            )
+
+            st.markdown(label_html("Number of dependents", "Bilangan tanggungan"), unsafe_allow_html=True)
+            dependentsS = st.selectbox(
+                "dependentsS",
+                OPTIONS["Number of Dependents"],
+                index=0,
+                format_func=fmt("Number of Dependents"),
+                help=help_text("Select number of dependents.", "Pilih bilangan tanggungan."),
+            )
+
+            st.markdown(label_html("Rental type", "Jenis penyewaan"), unsafe_allow_html=True)
+            jenis_penyewaanS = st.selectbox(
+                "jenis_penyewaanS",
+                OPTIONS["Jenis Penyewaan"],
+                index=0,
+                format_func=fmt("Jenis Penyewaan"),
+                help=help_text("Whole house or room.", "Rumah/unit atau bilik."),
+            )
+
+            st.markdown(label_html("Type of rental housing", "Jenis rumah sewa"), unsafe_allow_html=True)
+            jenis_rumahS = st.selectbox(
+                "jenis_rumahS",
+                OPTIONS["Jenis Rumah Sewa"],
+                index=0,
+                format_func=fmt("Jenis Rumah Sewa"),
+                help=help_text("Select rental housing type.", "Pilih jenis rumah sewa."),
+            )
+
+            st.markdown(label_html("Furnished type", "Jenis kelengkapan perabot"), unsafe_allow_html=True)
+            furnishedS = st.selectbox(
+                "furnishedS",
+                OPTIONS["Furnished Type"],
+                index=0,
+                format_func=fmt("Furnished Type"),
+                help=help_text("Select furnishing level.", "Pilih tahap perabot."),
+            )
+
+            st.markdown(label_html("Deposit", "Deposit"), unsafe_allow_html=True)
+            depositS = st.selectbox(
+                "depositS",
+                OPTIONS["Deposit"],
+                index=0,
+                format_func=fmt("Deposit"),
+                help=help_text("Select deposit arrangement.", "Pilih jenis deposit."),
+            )
+
+            st.markdown(label_html("Total years renting", "Tempoh menyewa"), unsafe_allow_html=True)
+            tempohS = st.selectbox(
+                "tempohS",
+                OPTIONS["Tempoh Menyewa"],
+                index=0,
+                format_func=fmt("Tempoh Menyewa"),
+                help=help_text("Select renting duration.", "Pilih tempoh menyewa."),
+            )
+
+            st.markdown(label_html("Know SMART SEWA scheme?", "Tahu skim SMART SEWA?"), unsafe_allow_html=True)
+            skimS = st.selectbox(
+                "skimS",
+                OPTIONS["Skim"],
+                index=1,
+                format_func=fmt("Skim"),
+                help=help_text("Awareness of affordable rental schemes.", "Tahap pengetahuan skim mampu sewa."),
+            )
 
         st.divider()
         st.subheader("Income & Rent Inputs")
+
         c1, c2, c3 = st.columns(3)
         with c1:
-            incomeS = st.number_input("Monthly Income (RM)", min_value=0.0, value=6000.0, step=100.0, key="incomeS")
+            st.markdown(label_html("Monthly income (RM)", "Pendapatan bulanan (RM)"), unsafe_allow_html=True)
+            incomeS = st.number_input(
+                "incomeS",
+                min_value=0.0,
+                value=6000.0,
+                step=100.0,
+                help=help_text("Enter monthly income.", "Masukkan pendapatan bulanan."),
+            )
         with c2:
-            rentS = st.number_input("Monthly Rent (RM)", min_value=0.0, value=2000.0, step=50.0, key="rentS")
+            st.markdown(label_html("Monthly rent (RM)", "Sewa bulanan (RM)"), unsafe_allow_html=True)
+            rentS = st.number_input(
+                "rentS",
+                min_value=0.0,
+                value=2000.0,
+                step=50.0,
+                help=help_text("Enter monthly rent.", "Masukkan sewa bulanan."),
+            )
         with c3:
-            ratioS = st.number_input("Rent ratio threshold", min_value=0.0, max_value=1.0, value=0.38, step=0.01, key="ratioS")
+            st.markdown(label_html("Rent ratio threshold", "Had nisbah sewa"), unsafe_allow_html=True)
+            ratioS = st.number_input(
+                "ratioS",
+                min_value=0.0,
+                max_value=1.0,
+                value=0.38,
+                step=0.01,
+                help=help_text("Max rent share of income.", "Had maksimum sewa berbanding pendapatan."),
+            )
 
         runS = st.button("✅ Run By Negeri", use_container_width=True, key="runS")
 
