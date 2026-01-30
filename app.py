@@ -765,7 +765,7 @@ logo_paths = [
 top_l, top_r = st.columns([0.68, 0.32], vertical_alignment="center")
 with top_l:
     st.markdown("## Rental Affordability Checker")
-    st.caption("Two checks are applied. Overall = Afford only if both are satisfied.")
+    st.caption("Two checks are applied: Condition A (Logistic model) and Condition B (Rent ≤ ratio×Income). Overall = Afford only if both are satisfied.")
 with top_r:
     st.markdown(logo_strip_html(logo_paths, height_px=40, gap_px=10), unsafe_allow_html=True)
     dark_mode = st.toggle("Dark mode", value=True)
