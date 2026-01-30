@@ -1608,7 +1608,7 @@ with tab_negeri:
         st.subheader("Results")
 
         if resS is None:
-            st.info("Pick a negeri, then click **Run By State**.")
+            st.info("Pick a state, then click **Run By State**.")
         else:
             st.markdown(
                 f"""
