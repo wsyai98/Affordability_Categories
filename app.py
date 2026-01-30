@@ -1322,7 +1322,7 @@ with tab_checker:
             with g1:
                 st.components.v1.html(
                     svg_gauge_html(
-                        title="Condition A Meter",
+                        title="Condition A Meter (Probability p)",
                         value_0_1=float(res["p"]),
                         threshold_0_1=float(P_THRESHOLD),
                         subtitle_left="Low",
@@ -1340,7 +1340,7 @@ with tab_checker:
                 closeness = clamp(share / ratio_v, 0.0, 1.0) if ratio_v > 0 else 0.0
                 st.components.v1.html(
                     svg_gauge_html(
-                        title="Condition B Meter",
+                        title="Condition B Meter (Rent vs Threshold)",
                         value_0_1=float(closeness),
                         threshold_0_1=1.0,
                         subtitle_left=f"Rent/Income: {share:.2f}",
