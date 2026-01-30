@@ -6,12 +6,15 @@ from pathlib import Path
 import base64
 
 # ==========================================================
-# Rental Affordability Checker (English UI) - UI Focus
+# Rental Affordability Checker (UI Focus)
 # - 2 tabs only: Checker | By Negeri
 # - 3 states only: Selangor, Putrajaya, Kuala Lumpur
 # - No calculation table, no CSV download, no "Rules used"
-# - Results labels are general (no formulas)
+# - Results labels are general (no formulas shown)
 # - By Negeri uses state-specific coefficients
+# - FIXED:
+#   (1) Full width page (remove max-width constraint)
+#   (2) Dark mode dropdown list uses WHITE bg + BLACK font (readable)
 # ==========================================================
 
 APP_DIR = Path(__file__).resolve().parent
@@ -169,7 +172,7 @@ def svg_gauge_html(
         <line x1="{cx:.2f}" y1="{cy:.2f}" x2="{nx:.2f}" y2="{ny:.2f}"
               stroke="rgba(17,24,39,0.95)" stroke-width="4" stroke-linecap="round" />
         <circle cx="{cx:.2f}" cy="{cy:.2f}" r="7"
-                fill="rgba(17,24,39,0.95)" stroke="rgba(255,255,255,0.35)" stroke-width="2" />
+                fill="rgba(17,24,39,0.95)" stroke="rgba(255,255,255,0.35)" stroke-width="2" stroke-linecap="round" />
       </svg>
     </div>
 
@@ -185,7 +188,7 @@ def svg_gauge_html(
 
 
 # ==========================================================
-# ✅ OPTIONS (STANDARDIZED)
+# ✅ OPTIONS (STANDARDIZED - ikut list variables)
 # ==========================================================
 OPTIONS = {
     "Gender": ["Lelaki", "Perempuan"],
@@ -217,8 +220,7 @@ OPTIONS = {
 # ✅ COEFFICIENTS (STATE-SPECIFIC)
 # ==========================================================
 # IMPORTANT:
-# - Letak coefficient set penuh untuk setiap negeri dekat sini.
-# - Aku letak contoh "berbeza" (placeholder). Kau boleh replace terus.
+# - Replace Putrajaya & KL with real full sets when you have them.
 COEF_SELANGOR = {
     "Umur": 0.002,
     "Jantina ketua keluarga(1)": 0.007,
@@ -259,7 +261,7 @@ COEF_SELANGOR = {
     "Constant": 0.310,
 }
 
-# Placeholder example: Putrajaya (replace with real full set)
+# Placeholder differences (replace with REAL values later)
 COEF_PUTRAJAYA = dict(COEF_SELANGOR)
 COEF_PUTRAJAYA.update({
     "Constant": 0.340,
@@ -267,7 +269,6 @@ COEF_PUTRAJAYA.update({
     "Jenis Penyewaan=Bilik(1)": 1.050,
 })
 
-# Placeholder example: Kuala Lumpur (replace with real full set)
 COEF_KUALALUMPUR = dict(COEF_SELANGOR)
 COEF_KUALALUMPUR.update({
     "Constant": 0.325,
@@ -285,10 +286,10 @@ COEF_DEFAULT = COEF_SELANGOR  # Checker tab default
 
 
 # ==========================================================
-# ✅ MAP CENTER POINTS (STATE HIGHLIGHT)
+# ✅ MAP CENTER POINTS (STATE HIGHLIGHT via point)
 # ==========================================================
 STATE_CENTER = {
-    "Selangor": (3.0738, 101.5183),      # Shah Alam area
+    "Selangor": (3.0738, 101.5183),       # Shah Alam area
     "Putrajaya": (2.9264, 101.6964),
     "Kuala Lumpur": (3.1390, 101.6869),
 }
@@ -393,7 +394,7 @@ def build_inputs(
         inp["Jenis rumah sewa=Rumah 1 unit(1)"] = 1.0
     elif jenis_rumah == "Lain-lain":
         inp["Jenis rumah sewa=Lain-lain(1)"] = 1.0
-    # Flat treated as base here (no dummy)
+    # Flat treated as base here
 
     # Furnished base = Tiada perabot
     if furnished == "Perabot penuh":
@@ -467,9 +468,11 @@ if dark_mode:
     INPUT_BG = "rgba(17, 24, 39, 0.92)"
     INPUT_BORDER = "rgba(167, 139, 250, 0.22)"
     INPUT_TEXT = "#f8fafc"
+
+    # ✅ IMPORTANT: Dark mode dropdown list should be WHITE background + BLACK font
     MENU_BG = "#ffffff"
     MENU_TEXT = "#111827"
-    MENU_HOVER = "rgba(139, 92, 246, 0.10)"
+    MENU_HOVER = "rgba(139, 92, 246, 0.12)"
 else:
     PAGE_BG = "linear-gradient(180deg, #f7f2ff 0%, #f7f2ff 45%, #efe6ff 100%)"
     CARD_BG = "rgba(255,255,255,0.84)"
@@ -478,10 +481,12 @@ else:
     INPUT_BG = "rgba(255,255,255,0.98)"
     INPUT_BORDER = "rgba(139, 92, 246, 0.22)"
     INPUT_TEXT = "#111827"
+
     MENU_BG = "#ffffff"
     MENU_TEXT = "#111827"
     MENU_HOVER = "rgba(139, 92, 246, 0.12)"
 
+# ======================== CSS ===========================
 st.markdown(
     f"""
 <style>
@@ -495,9 +500,11 @@ st.markdown(
     color: {TXT} !important;
   }}
 
-  /* ✅ keep size feel (avoid compact look) */
-  html, body {{ font-size: 16px !important; }}
-  .block-container {{ padding-top: .75rem; max-width: 1200px; }}
+  /* ✅ FULL WIDTH FIX (no max-width limit) */
+  .block-container {{
+    padding-top: .75rem;
+    max-width: 100% !important;
+  }}
 
   .purple-card {{
     background: {CARD_BG};
@@ -511,6 +518,7 @@ st.markdown(
     color: {TXT} !important;
   }}
 
+  /* Inputs */
   .stNumberInput input, .stTextInput input, .stTextArea textarea {{
     background: {INPUT_BG} !important;
     border: 1px solid {INPUT_BORDER} !important;
@@ -520,6 +528,7 @@ st.markdown(
     border-radius: 12px !important;
   }}
 
+  /* Closed select control */
   [data-baseweb="select"] > div {{
     background: {INPUT_BG} !important;
     border: 1px solid {INPUT_BORDER} !important;
@@ -530,10 +539,15 @@ st.markdown(
     -webkit-text-fill-color: {INPUT_TEXT} !important;
   }}
 
-  /* dropdown list readable */
+  /* ==========================================================
+     ✅ Dropdown list (options) - ALWAYS readable
+     Dark mode: WHITE bg + BLACK font
+     Light mode: already OK, still keep consistent
+     ========================================================== */
   div[role="dialog"] {{
     background: {MENU_BG} !important;
   }}
+
   div[role="dialog"] [data-baseweb="menu"],
   div[role="dialog"] ul[role="listbox"],
   [data-baseweb="menu"],
@@ -544,6 +558,7 @@ st.markdown(
     background: {MENU_BG} !important;
     border: 1px solid {INPUT_BORDER} !important;
   }}
+
   div[role="dialog"] [data-baseweb="menu"] *,
   div[role="dialog"] ul[role="listbox"] *,
   [data-baseweb="menu"] *,
@@ -554,8 +569,22 @@ st.markdown(
     -webkit-text-fill-color: {MENU_TEXT} !important;
     opacity: 1 !important;
   }}
+
+  div[role="dialog"] li[role="option"],
+  li[role="option"] {{
+    background: transparent !important;
+    color: {MENU_TEXT} !important;
+    -webkit-text-fill-color: {MENU_TEXT} !important;
+    opacity: 1 !important;
+  }}
+
   div[role="dialog"] li[role="option"]:hover,
   li[role="option"]:hover {{
+    background: {MENU_HOVER} !important;
+  }}
+
+  div[role="dialog"] [aria-selected="true"],
+  [aria-selected="true"] {{
     background: {MENU_HOVER} !important;
   }}
 
@@ -589,13 +618,13 @@ st.markdown(
     background: rgba(239,68,68,0.16);
   }}
 
-  /* Metrics size (so it doesn't look kecil) */
+  /* Metrics size (avoid "kecik") */
   [data-testid="stMetricValue"] > div {{
     font-size: 2rem !important;
     line-height: 1.15 !important;
   }}
 
-  /* Logo */
+  /* Logo strip */
   .logo-wrap {{ display:flex; justify-content:flex-end; }}
   .logo-strip {{
     display:inline-flex;
@@ -614,7 +643,6 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
-
 
 # ==========================================================
 # ✅ 2 TABS ONLY
@@ -723,7 +751,7 @@ with tab_checker:
         if res is None:
             st.info("Click **Run Check** to show results.")
         else:
-            # ✅ GENERAL labels
+            # ✅ GENERAL labels (no formulas shown)
             st.markdown(
                 f"""
 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
@@ -793,7 +821,6 @@ with tab_negeri:
 
     st.divider()
 
-    # same input UI (state tab)
     leftS, rightS = st.columns([1, 1.35], gap="large")
 
     with leftS:
