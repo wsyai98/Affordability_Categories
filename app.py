@@ -1307,7 +1307,7 @@ with tab_checker:
 # ==========================================================
 with tab_negeri:
     st.markdown('<div class="purple-card">', unsafe_allow_html=True)
-    st.subheader("By Negeri")
+    st.subheader("By State")
 
     st.markdown(label_html("Select state", "Pilih negeri"), unsafe_allow_html=True)
     negeri = st.selectbox(
