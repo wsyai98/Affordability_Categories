@@ -7,6 +7,7 @@ import base64
 
 # ==========================================================
 # Rental Affordability Checker (UI Focus)
+# ----------------------------------------------------------
 # - 2 tabs only: Checker | By Negeri
 # - 3 states only: Selangor, Putrajaya, Kuala Lumpur
 # - No calculation table, no CSV download, no "Rules used"
@@ -18,6 +19,7 @@ import base64
 #   (2) Dark mode dropdown list uses WHITE bg + BLACK font (readable)
 #   (3) Bilingual labels: English (big) + Malay (small)
 #   (4) Each variable has a "?" help indicator (EN + BM)
+#   (5) ✅ Hide the internal widget variable names (ethnicityS, depositS, etc.)
 # ==========================================================
 
 APP_DIR = Path(__file__).resolve().parent
@@ -977,7 +979,7 @@ st.markdown(
 # ==========================================================
 # ✅ 2 TABS ONLY
 # ==========================================================
-tab_checker, tab_negeri = st.tabs(["✅ Checker", "🗺️ By State"])
+tab_checker, tab_negeri = st.tabs(["✅ Checker", "🗺️ By Negeri"])
 
 
 # ==========================================================
@@ -1000,10 +1002,7 @@ with tab_checker:
                 value=38,
                 step=1,
                 label_visibility="collapsed",
-                help=help_text(
-                    "Enter the respondent's age in years.",
-                    "Masukkan umur responden dalam tahun.",
-                ),
+                help=help_text("Enter the respondent's age in years.", "Masukkan umur responden dalam tahun."),
             )
 
             st.markdown(label_html("Gender", "Jantina"), unsafe_allow_html=True)
@@ -1013,10 +1012,7 @@ with tab_checker:
                 index=0,
                 format_func=fmt("Gender"),
                 label_visibility="collapsed",
-                help=help_text(
-                    "Select the gender of household head.",
-                    "Pilih jantina ketua isi rumah.",
-                ),
+                help=help_text("Select the gender of household head.", "Pilih jantina ketua isi rumah."),
             )
 
             st.markdown(label_html("Nationality", "Warganegara"), unsafe_allow_html=True)
@@ -1039,10 +1035,7 @@ with tab_checker:
                 index=0,
                 format_func=fmt("Ethnicity"),
                 label_visibility="collapsed",
-                help=help_text(
-                    "Choose the respondent's ethnicity category.",
-                    "Pilih kategori bangsa responden.",
-                ),
+                help=help_text("Choose the respondent's ethnicity category.", "Pilih kategori bangsa responden."),
             )
 
             st.markdown(label_html("Religion", "Agama"), unsafe_allow_html=True)
@@ -1052,10 +1045,7 @@ with tab_checker:
                 index=0,
                 format_func=fmt("Religion"),
                 label_visibility="collapsed",
-                help=help_text(
-                    "Choose the respondent's religion category.",
-                    "Pilih kategori agama responden.",
-                ),
+                help=help_text("Choose the respondent's religion category.", "Pilih kategori agama responden."),
             )
 
             st.markdown(label_html("Marital status", "Status perkahwinan"), unsafe_allow_html=True)
@@ -1065,10 +1055,7 @@ with tab_checker:
                 index=0,
                 format_func=fmt("Marital Status"),
                 label_visibility="collapsed",
-                help=help_text(
-                    "Select the respondent's marital status.",
-                    "Pilih status perkahwinan responden.",
-                ),
+                help=help_text("Select the respondent's marital status.", "Pilih status perkahwinan responden."),
             )
 
             st.markdown(label_html("Education level", "Tahap pendidikan"), unsafe_allow_html=True)
@@ -1078,10 +1065,7 @@ with tab_checker:
                 index=0,
                 format_func=fmt("Education Level"),
                 label_visibility="collapsed",
-                help=help_text(
-                    "Select the highest education level.",
-                    "Pilih tahap pendidikan tertinggi.",
-                ),
+                help=help_text("Select the highest education level.", "Pilih tahap pendidikan tertinggi."),
             )
 
         with colB:
@@ -1092,10 +1076,7 @@ with tab_checker:
                 index=0,
                 format_func=fmt("Occupation"),
                 label_visibility="collapsed",
-                help=help_text(
-                    "Select the respondent's occupation category.",
-                    "Pilih kategori pekerjaan responden.",
-                ),
+                help=help_text("Select the respondent's occupation category.", "Pilih kategori pekerjaan responden."),
             )
 
             st.markdown(label_html("Household size", "Bilangan isi rumah"), unsafe_allow_html=True)
@@ -1105,10 +1086,7 @@ with tab_checker:
                 index=0,
                 format_func=fmt("Household Size"),
                 label_visibility="collapsed",
-                help=help_text(
-                    "Total number of people living in the household.",
-                    "Jumlah orang yang tinggal dalam isi rumah.",
-                ),
+                help=help_text("Total number of people living in the household.", "Jumlah orang yang tinggal dalam isi rumah."),
             )
 
             st.markdown(label_html("Number of dependents", "Bilangan tanggungan"), unsafe_allow_html=True)
@@ -1131,10 +1109,7 @@ with tab_checker:
                 index=0,
                 format_func=fmt("Jenis Penyewaan"),
                 label_visibility="collapsed",
-                help=help_text(
-                    "Choose whether renting a whole unit/house or just a room.",
-                    "Pilih sama ada menyewa rumah/unit atau bilik sahaja.",
-                ),
+                help=help_text("Choose whether renting a whole unit/house or just a room.", "Pilih sama ada menyewa rumah/unit atau bilik sahaja."),
             )
 
             st.markdown(label_html("Type of rental housing", "Jenis rumah sewa"), unsafe_allow_html=True)
@@ -1144,10 +1119,7 @@ with tab_checker:
                 index=0,
                 format_func=fmt("Jenis Rumah Sewa"),
                 label_visibility="collapsed",
-                help=help_text(
-                    "Select the rental housing type (e.g., flat/condo/terrace).",
-                    "Pilih jenis rumah sewa (cth: flat/kondo/teres).",
-                ),
+                help=help_text("Select the rental housing type (e.g., flat/condo/terrace).", "Pilih jenis rumah sewa (cth: flat/kondo/teres)."),
             )
 
             st.markdown(label_html("Furnished type", "Jenis kelengkapan perabot"), unsafe_allow_html=True)
@@ -1157,10 +1129,7 @@ with tab_checker:
                 index=0,
                 format_func=fmt("Furnished Type"),
                 label_visibility="collapsed",
-                help=help_text(
-                    "Indicate the furnishing level of the rental unit.",
-                    "Nyatakan tahap perabot bagi rumah sewa.",
-                ),
+                help=help_text("Indicate the furnishing level of the rental unit.", "Nyatakan tahap perabot bagi rumah sewa."),
             )
 
             st.markdown(label_html("Deposit", "Deposit"), unsafe_allow_html=True)
@@ -1183,10 +1152,7 @@ with tab_checker:
                 index=0,
                 format_func=fmt("Tempoh Menyewa"),
                 label_visibility="collapsed",
-                help=help_text(
-                    "How long the respondent has been renting.",
-                    "Tempoh responden telah menyewa.",
-                ),
+                help=help_text("How long the respondent has been renting.", "Tempoh responden telah menyewa."),
             )
 
             st.markdown(label_html("Know SMART SEWA scheme?", "Tahu skim SMART SEWA?"), unsafe_allow_html=True)
@@ -1214,10 +1180,7 @@ with tab_checker:
                 value=6000.0,
                 step=100.0,
                 label_visibility="collapsed",
-                help=help_text(
-                    "Enter total monthly household income in RM.",
-                    "Masukkan jumlah pendapatan isi rumah bulanan (RM).",
-                ),
+                help=help_text("Enter total monthly household income in RM.", "Masukkan jumlah pendapatan isi rumah bulanan (RM)."),
             )
         with c2:
             st.markdown(label_html("Monthly rent (RM)", "Sewa bulanan (RM)"), unsafe_allow_html=True)
@@ -1227,10 +1190,7 @@ with tab_checker:
                 value=2000.0,
                 step=50.0,
                 label_visibility="collapsed",
-                help=help_text(
-                    "Enter monthly rent amount in RM.",
-                    "Masukkan jumlah sewa bulanan (RM).",
-                ),
+                help=help_text("Enter monthly rent amount in RM.", "Masukkan jumlah sewa bulanan (RM)."),
             )
         with c3:
             st.markdown(label_html("Rent ratio threshold", "Had nisbah sewa"), unsafe_allow_html=True)
@@ -1241,10 +1201,7 @@ with tab_checker:
                 value=0.38,
                 step=0.01,
                 label_visibility="collapsed",
-                help=help_text(
-                    "Max recommended rent share of income (example: 0.38 = 38%).",
-                    "Had maksimum sewa berbanding pendapatan (cth: 0.38 = 38%).",
-                ),
+                help=help_text("Max recommended rent share of income (example: 0.38 = 38%).", "Had maksimum sewa berbanding pendapatan (cth: 0.38 = 38%)."),
             )
 
         run = st.button("✅ Run Check", use_container_width=True)
@@ -1322,7 +1279,7 @@ with tab_checker:
             with g1:
                 st.components.v1.html(
                     svg_gauge_html(
-                        title="Condition A Meter (Probability p)",
+                        title="Condition A Meter",
                         value_0_1=float(res["p"]),
                         threshold_0_1=float(P_THRESHOLD),
                         subtitle_left="Low",
@@ -1340,7 +1297,7 @@ with tab_checker:
                 closeness = clamp(share / ratio_v, 0.0, 1.0) if ratio_v > 0 else 0.0
                 st.components.v1.html(
                     svg_gauge_html(
-                        title="Condition B Meter (Rent vs Threshold)",
+                        title="Condition B Meter",
                         value_0_1=float(closeness),
                         threshold_0_1=1.0,
                         subtitle_left=f"Rent/Income: {share:.2f}",
@@ -1394,147 +1351,179 @@ with tab_negeri:
         with colA:
             st.markdown(label_html("Age (years)", "Umur (tahun)"), unsafe_allow_html=True)
             ageS = st.number_input(
-                "ageS",
+                "",
                 min_value=15,
                 max_value=100,
                 value=38,
                 step=1,
+                key="ageS",
+                label_visibility="collapsed",
                 help=help_text("Enter age in years.", "Masukkan umur dalam tahun."),
             )
 
             st.markdown(label_html("Gender", "Jantina"), unsafe_allow_html=True)
             genderS = st.selectbox(
-                "genderS",
+                "",
                 OPTIONS["Gender"],
                 index=0,
                 format_func=fmt("Gender"),
+                key="genderS",
+                label_visibility="collapsed",
                 help=help_text("Select gender.", "Pilih jantina."),
             )
 
             st.markdown(label_html("Nationality", "Warganegara"), unsafe_allow_html=True)
             nationalityS = st.selectbox(
-                "nationalityS",
+                "",
                 OPTIONS["Nationality"],
                 index=0,
                 format_func=fmt("Nationality"),
+                key="nationalityS",
+                label_visibility="collapsed",
                 help=help_text("Select nationality.", "Pilih warganegara."),
             )
 
             st.markdown(label_html("Ethnicity", "Bangsa"), unsafe_allow_html=True)
             ethnicityS = st.selectbox(
-                "ethnicityS",
+                "",
                 OPTIONS["Ethnicity"],
                 index=0,
                 format_func=fmt("Ethnicity"),
+                key="ethnicityS",
+                label_visibility="collapsed",
                 help=help_text("Select ethnicity.", "Pilih bangsa."),
             )
 
             st.markdown(label_html("Religion", "Agama"), unsafe_allow_html=True)
             religionS = st.selectbox(
-                "religionS",
+                "",
                 OPTIONS["Religion"],
                 index=0,
                 format_func=fmt("Religion"),
+                key="religionS",
+                label_visibility="collapsed",
                 help=help_text("Select religion.", "Pilih agama."),
             )
 
             st.markdown(label_html("Marital status", "Status perkahwinan"), unsafe_allow_html=True)
             maritalS = st.selectbox(
-                "maritalS",
+                "",
                 OPTIONS["Marital Status"],
                 index=0,
                 format_func=fmt("Marital Status"),
+                key="maritalS",
+                label_visibility="collapsed",
                 help=help_text("Select marital status.", "Pilih status perkahwinan."),
             )
 
             st.markdown(label_html("Education level", "Tahap pendidikan"), unsafe_allow_html=True)
             eduS = st.selectbox(
-                "eduS",
+                "",
                 OPTIONS["Education Level"],
                 index=0,
                 format_func=fmt("Education Level"),
+                key="eduS",
+                label_visibility="collapsed",
                 help=help_text("Select education level.", "Pilih tahap pendidikan."),
             )
 
         with colB:
             st.markdown(label_html("Occupation", "Pekerjaan"), unsafe_allow_html=True)
             jobS = st.selectbox(
-                "jobS",
+                "",
                 OPTIONS["Occupation"],
                 index=0,
                 format_func=fmt("Occupation"),
+                key="jobS",
+                label_visibility="collapsed",
                 help=help_text("Select occupation.", "Pilih pekerjaan."),
             )
 
             st.markdown(label_html("Household size", "Bilangan isi rumah"), unsafe_allow_html=True)
             householdS = st.selectbox(
-                "householdS",
+                "",
                 OPTIONS["Household Size"],
                 index=0,
                 format_func=fmt("Household Size"),
+                key="householdS",
+                label_visibility="collapsed",
                 help=help_text("Select household size.", "Pilih bilangan isi rumah."),
             )
 
             st.markdown(label_html("Number of dependents", "Bilangan tanggungan"), unsafe_allow_html=True)
             dependentsS = st.selectbox(
-                "dependentsS",
+                "",
                 OPTIONS["Number of Dependents"],
                 index=0,
                 format_func=fmt("Number of Dependents"),
+                key="dependentsS",
+                label_visibility="collapsed",
                 help=help_text("Select number of dependents.", "Pilih bilangan tanggungan."),
             )
 
             st.markdown(label_html("Rental type", "Jenis penyewaan"), unsafe_allow_html=True)
             jenis_penyewaanS = st.selectbox(
-                "jenis_penyewaanS",
+                "",
                 OPTIONS["Jenis Penyewaan"],
                 index=0,
                 format_func=fmt("Jenis Penyewaan"),
+                key="jenis_penyewaanS",
+                label_visibility="collapsed",
                 help=help_text("Whole house or room.", "Rumah/unit atau bilik."),
             )
 
             st.markdown(label_html("Type of rental housing", "Jenis rumah sewa"), unsafe_allow_html=True)
             jenis_rumahS = st.selectbox(
-                "jenis_rumahS",
+                "",
                 OPTIONS["Jenis Rumah Sewa"],
                 index=0,
                 format_func=fmt("Jenis Rumah Sewa"),
+                key="jenis_rumahS",
+                label_visibility="collapsed",
                 help=help_text("Select rental housing type.", "Pilih jenis rumah sewa."),
             )
 
             st.markdown(label_html("Furnished type", "Jenis kelengkapan perabot"), unsafe_allow_html=True)
             furnishedS = st.selectbox(
-                "furnishedS",
+                "",
                 OPTIONS["Furnished Type"],
                 index=0,
                 format_func=fmt("Furnished Type"),
+                key="furnishedS",
+                label_visibility="collapsed",
                 help=help_text("Select furnishing level.", "Pilih tahap perabot."),
             )
 
             st.markdown(label_html("Deposit", "Deposit"), unsafe_allow_html=True)
             depositS = st.selectbox(
-                "depositS",
+                "",
                 OPTIONS["Deposit"],
                 index=0,
                 format_func=fmt("Deposit"),
+                key="depositS",
+                label_visibility="collapsed",
                 help=help_text("Select deposit arrangement.", "Pilih jenis deposit."),
             )
 
             st.markdown(label_html("Total years renting", "Tempoh menyewa"), unsafe_allow_html=True)
             tempohS = st.selectbox(
-                "tempohS",
+                "",
                 OPTIONS["Tempoh Menyewa"],
                 index=0,
                 format_func=fmt("Tempoh Menyewa"),
+                key="tempohS",
+                label_visibility="collapsed",
                 help=help_text("Select renting duration.", "Pilih tempoh menyewa."),
             )
 
             st.markdown(label_html("Know SMART SEWA scheme?", "Tahu skim SMART SEWA?"), unsafe_allow_html=True)
             skimS = st.selectbox(
-                "skimS",
+                "",
                 OPTIONS["Skim"],
                 index=1,
                 format_func=fmt("Skim"),
+                key="skimS",
+                label_visibility="collapsed",
                 help=help_text("Awareness of affordable rental schemes.", "Tahap pengetahuan skim mampu sewa."),
             )
 
@@ -1545,29 +1534,35 @@ with tab_negeri:
         with c1:
             st.markdown(label_html("Monthly income (RM)", "Pendapatan bulanan (RM)"), unsafe_allow_html=True)
             incomeS = st.number_input(
-                "incomeS",
+                "",
                 min_value=0.0,
                 value=6000.0,
                 step=100.0,
+                key="incomeS",
+                label_visibility="collapsed",
                 help=help_text("Enter monthly income.", "Masukkan pendapatan bulanan."),
             )
         with c2:
             st.markdown(label_html("Monthly rent (RM)", "Sewa bulanan (RM)"), unsafe_allow_html=True)
             rentS = st.number_input(
-                "rentS",
+                "",
                 min_value=0.0,
                 value=2000.0,
                 step=50.0,
+                key="rentS",
+                label_visibility="collapsed",
                 help=help_text("Enter monthly rent.", "Masukkan sewa bulanan."),
             )
         with c3:
             st.markdown(label_html("Rent ratio threshold", "Had nisbah sewa"), unsafe_allow_html=True)
             ratioS = st.number_input(
-                "ratioS",
+                "",
                 min_value=0.0,
                 max_value=1.0,
                 value=0.38,
                 step=0.01,
+                key="ratioS",
+                label_visibility="collapsed",
                 help=help_text("Max rent share of income.", "Had maksimum sewa berbanding pendapatan."),
             )
 
